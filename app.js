@@ -27,8 +27,10 @@ const db = getFirestore(app);
 let currentUser = null;
 let currentRole = "colaborador";
 let allProducts = [];
+let allUsers = [];
 let selectedRejectId = null;
 let editingProductId = null;
+let editingUserId = null;
 
 const loginScreen = document.getElementById('login-screen');
 const appContainer = document.getElementById('app-container');
@@ -45,6 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupNavigation();
   setupMobileSidebar();
   setupModalEvents();
+  setupUserModalEvents();
   setupFirebaseAuthObserver();
 });
 
@@ -134,7 +137,6 @@ function setupFirebaseAuthObserver() {
       appContainer.style.display = 'flex';
       userEmailDisplay.textContent = user.email;
 
-      // Garantiza el registro en Firestore para Google Login y cualquier usuario
       await ensureUserExistsInFirestore(user);
       await fetchUserRole(user.email);
     } else {
@@ -145,7 +147,6 @@ function setupFirebaseAuthObserver() {
   });
 }
 
-// Función unificada para asegurar el documento en Firestore
 async function ensureUserExistsInFirestore(user) {
   try {
     const usersRef = collection(db, "users");
@@ -159,14 +160,12 @@ async function ensureUserExistsInFirestore(user) {
         rol: "colaborador",
         creado: new Date().toISOString()
       });
-      console.log("Nuevo usuario guardado en Firestore correctamente.");
     }
   } catch (error) {
     console.error("Error al asegurar el usuario en Firestore:", error);
   }
 }
 
-// Verificación de rol y permisos
 async function fetchUserRole(email) {
   try {
     const usersRef = collection(db, "users");
@@ -204,7 +203,6 @@ async function fetchUserRole(email) {
 function setupAuthEvents() {
   const googleProvider = new GoogleAuthProvider();
 
-  // BOTÓN GOOGLE LOGIN
   const btnGoogle = document.getElementById('btn-google-login');
   if (btnGoogle) {
     btnGoogle.onclick = async () => {
@@ -216,7 +214,6 @@ function setupAuthEvents() {
     };
   }
 
-  // FORMULARIO DE LOGIN CON CORREO
   const formLogin = document.getElementById('form-login');
   if (formLogin) {
     formLogin.addEventListener('submit', async (e) => {
@@ -232,7 +229,6 @@ function setupAuthEvents() {
     });
   }
 
-  // FORMULARIO DE REGISTRO
   const formRegister = document.getElementById('form-register');
   if (formRegister) {
     formRegister.addEventListener('submit', async (e) => {
@@ -259,7 +255,6 @@ function setupAuthEvents() {
     });
   }
 
-  // MODAL RECUPERAR CONTRASEÑA
   const modalForgot = document.getElementById('modal-forgot');
   const linkForgot = document.getElementById('link-forgot-password');
   const btnCloseForgot = document.getElementById('btn-close-forgot');
@@ -297,16 +292,18 @@ function setupAuthEvents() {
     });
   }
 
-  // BOTÓN CERRAR SESIÓN
   const btnLogout = document.getElementById('btn-logout');
-  if (btnLogout) {
-    btnLogout.onclick = async () => {
-      await signOut(auth);
-    };
-  }
+  const btnMobileLogout = document.getElementById('btn-mobile-logout');
+
+  if (btnLogout) btnLogout.onclick = async () => await signOut(auth);
+  if (btnMobileLogout) btnMobileLogout.onclick = async () => await signOut(auth);
 }
 
+// Navegación con control dinámico del botón principal según la sección
 function setupNavigation() {
+  const btnOpenCreate = document.getElementById('btn-open-create');
+  const btnActionText = document.getElementById('btn-action-text');
+
   navButtons.forEach(btn => {
     btn.addEventListener('click', () => {
       const targetView = btn.dataset.view;
@@ -315,9 +312,102 @@ function setupNavigation() {
 
       btn.classList.add('active');
       document.getElementById(`view-${targetView}`).classList.add('active');
+
+      // Cambio dinámico del botón principal superior
+      if (targetView === 'users') {
+        btnActionText.textContent = "Nuevo Usuario";
+        btnOpenCreate.onclick = () => openUserModal();
+      } else {
+        btnActionText.textContent = "Nuevo Producto";
+        btnOpenCreate.onclick = () => openProductModal();
+      }
     });
   });
 }
+
+function openProductModal() {
+  editingProductId = null;
+  document.getElementById('modal-title').textContent = "Registrar Producto / Idea";
+  document.getElementById('form-create-product').reset();
+  document.getElementById('modal-create').classList.add('active');
+}
+
+function openUserModal(userId = null) {
+  if (currentRole !== 'superadmin') return;
+  const modalUser = document.getElementById('modal-user');
+  const formUser = document.getElementById('form-save-user');
+  
+  if (userId) {
+    editingUserId = userId;
+    document.getElementById('user-modal-title').textContent = "Editar Usuario";
+    const user = allUsers.find(u => u.id === userId);
+    if (user) {
+      document.getElementById('u-nombre').value = user.nombre || '';
+      document.getElementById('u-email').value = user.email || '';
+      document.getElementById('u-rol').value = user.rol || 'colaborador';
+    }
+  } else {
+    editingUserId = null;
+    document.getElementById('user-modal-title').textContent = "Registrar Nuevo Usuario";
+    formUser.reset();
+  }
+  modalUser.classList.add('active');
+}
+
+function setupUserModalEvents() {
+  const modalUser = document.getElementById('modal-user');
+  const formUser = document.getElementById('form-save-user');
+
+  document.getElementById('btn-close-user-modal').onclick = () => modalUser.classList.remove('active');
+  document.getElementById('btn-cancel-user-modal').onclick = () => modalUser.classList.remove('active');
+
+  formUser.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (currentRole !== 'superadmin') return;
+
+    const userData = {
+      nombre: document.getElementById('u-nombre').value,
+      email: document.getElementById('u-email').value,
+      rol: document.getElementById('u-rol').value
+    };
+
+    try {
+      if (editingUserId) {
+        const userRef = doc(db, "users", editingUserId);
+        await updateDoc(userRef, userData);
+        alert("Usuario actualizado correctamente.");
+      } else {
+        userData.creado = new Date().toISOString();
+        await addDoc(collection(db, "users"), userData);
+        alert("Usuario creado correctamente.");
+      }
+      modalUser.classList.remove('active');
+      formUser.reset();
+      editingUserId = null;
+    } catch (error) {
+      alert("Error al guardar usuario: " + error.message);
+    }
+  });
+}
+
+window.deleteUser = async (userId) => {
+  if (currentRole !== 'superadmin') {
+    alert("Acción no autorizada.");
+    return;
+  }
+  if (confirm("¿Estás seguro de eliminar este usuario del sistema?")) {
+    try {
+      await deleteDoc(doc(db, "users", userId));
+      alert("Usuario eliminado correctamente.");
+    } catch (error) {
+      alert("Error al eliminar usuario: " + error.message);
+    }
+  }
+};
+
+window.openEditUserModal = (userId) => {
+  openUserModal(userId);
+};
 
 // Productos en tiempo real
 function setupFirebaseRealtimeProducts() {
@@ -341,11 +431,11 @@ function setupFirebaseRealtimeUsers() {
 
   const usersRef = collection(db, "users");
   onSnapshot(usersRef, (snapshot) => {
-    const usersList = snapshot.docs.map(doc => ({
+    allUsers = snapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
     }));
-    renderUsersTable(usersList);
+    renderUsersTable(allUsers);
   });
 }
 
@@ -354,7 +444,7 @@ function renderUsersTable(users) {
   if (!tbody) return;
 
   if (users.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="4" style="padding: 16px; text-align: center; color: var(--text-muted);">No hay usuarios registrados.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="5" style="padding: 16px; text-align: center; color: var(--text-muted);">No hay usuarios registrados.</td></tr>`;
     return;
   }
 
@@ -369,6 +459,12 @@ function renderUsersTable(users) {
           <option value="admin" ${u.rol === 'admin' ? 'selected' : ''}>Administrador</option>
           <option value="superadmin" ${u.rol === 'superadmin' ? 'selected' : ''}>SuperAdministrador</option>
         </select>
+      </td>
+      <td style="padding: 12px 8px; text-align: center;">
+        <div style="display:flex; gap:6px; justify-content: center;">
+          <button class="btn" style="padding: 6px 10px; font-size: 0.8rem;" onclick="openEditUserModal('${u.id}')">Editar</button>
+          <button class="btn btn-danger" style="padding: 6px 10px; font-size: 0.8rem;" onclick="deleteUser('${u.id}')">Eliminar</button>
+        </div>
       </td>
     </tr>
   `).join('');
@@ -490,12 +586,9 @@ function setupModalEvents() {
   const modalReject = document.getElementById('modal-reject');
   const form = document.getElementById('form-create-product');
 
-  document.getElementById('btn-open-create').onclick = () => {
-    editingProductId = null;
-    document.getElementById('modal-title').textContent = "Registrar Producto / Idea";
-    form.reset();
-    modalCreate.classList.add('active');
-  };
+  // Configuración del botón principal al iniciar
+  const btnOpenCreate = document.getElementById('btn-open-create');
+  btnOpenCreate.onclick = () => openProductModal();
 
   document.getElementById('btn-close-create').onclick = () => modalCreate.classList.remove('active');
   document.getElementById('btn-cancel-create').onclick = () => modalCreate.classList.remove('active');
