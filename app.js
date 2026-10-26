@@ -328,7 +328,6 @@ function openProductModal() {
   editingProductId = null;
   document.getElementById('modal-title').textContent = "Registrar Producto / Idea";
   document.getElementById('form-create-product').reset();
-  document.getElementById('p-imagen-base64').value = '';
   document.getElementById('p-imagen-file').value = '';
   document.getElementById('btn-tab-url').click();
   document.getElementById('modal-create').classList.add('active');
@@ -597,6 +596,16 @@ function renderRequests() {
   `).join('');
 }
 
+// Función auxiliar para convertir archivo local a Base64 con Promesa
+function convertFileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
 function setupModalEvents() {
   const modalCreate = document.getElementById('modal-create');
   const modalReject = document.getElementById('modal-reject');
@@ -616,7 +625,6 @@ function setupModalEvents() {
   const btnTabFile = document.getElementById('btn-tab-file');
   const inputUrl = document.getElementById('p-imagen');
   const inputFile = document.getElementById('p-imagen-file');
-  const inputBase64 = document.getElementById('p-imagen-base64');
 
   if (btnTabUrl && btnTabFile) {
     btnTabUrl.onclick = () => {
@@ -625,7 +633,6 @@ function setupModalEvents() {
       inputUrl.style.display = 'block';
       inputFile.style.display = 'none';
       inputFile.value = '';
-      inputBase64.value = ''; // Limpia el base64 si cambia a URL
     };
 
     btnTabFile.onclick = () => {
@@ -633,21 +640,8 @@ function setupModalEvents() {
       btnTabUrl.classList.remove('active');
       inputFile.style.display = 'block';
       inputUrl.style.display = 'none';
-      inputUrl.value = ''; // Limpia la URL si cambia a archivo
+      inputUrl.value = '';
     };
-  }
-
-  if (inputFile) {
-    inputFile.addEventListener('change', (e) => {
-      const file = e.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          inputBase64.value = reader.result; // Almacena el nuevo archivo convertido
-        };
-        reader.readAsDataURL(file);
-      }
-    });
   }
 
   document.getElementById('p-tipo').addEventListener('change', (e) => {
@@ -657,53 +651,65 @@ function setupModalEvents() {
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     
-    const base64Value = document.getElementById('p-imagen-base64').value;
-    const urlValue = document.getElementById('p-imagen').value;
+    const submitBtn = document.getElementById('btn-submit-product');
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Guardando...";
 
-    // Si estamos editando y no se seleccionó ni escribió nada nuevo, conservamos la imagen actual del producto
-    let finalImagen = 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=500';
-    if (editingProductId) {
-      const existingProduct = allProducts.find(p => p.id === editingProductId);
-      if (existingProduct) {
-        finalImagen = existingProduct.imagen;
+    try {
+      let finalImagen = 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=500';
+
+      // Si estamos editando, tomamos por defecto la imagen que ya tenía
+      if (editingProductId) {
+        const existingProduct = allProducts.find(p => p.id === editingProductId);
+        if (existingProduct && existingProduct.imagen) {
+          finalImagen = existingProduct.imagen;
+        }
       }
-    }
 
-    if (btnTabFile.classList.contains('active') && base64Value) {
-      finalImagen = base64Value;
-    } else if (btnTabUrl.classList.contains('active') && urlValue.trim() !== '') {
-      finalImagen = urlValue.trim();
-    }
-
-    const productData = {
-      nombre: document.getElementById('p-nombre').value,
-      tipo: document.getElementById('p-tipo').value,
-      rama_magia: document.getElementById('p-rama').value,
-      propietario_idea: document.getElementById('p-propietario').value,
-      stock: parseInt(document.getElementById('p-stock').value) || 0,
-      imagen: finalImagen,
-      archivo: document.getElementById('p-archivo').value,
-      descripcion: document.getElementById('p-descripcion').value,
-    };
-
-    if (editingProductId) {
-      if (currentRole === 'colaborador') {
-        alert("No tienes permisos para editar productos.");
-        return;
+      // Verificamos qué pestaña está activa y si hay un nuevo valor
+      if (btnTabFile.classList.contains('active') && inputFile.files[0]) {
+        // Convierte el archivo seleccionado a Base64 de forma síncrona/esperada
+        finalImagen = await convertFileToBase64(inputFile.files[0]);
+      } else if (btnTabUrl.classList.contains('active') && inputUrl.value.trim() !== '') {
+        finalImagen = inputUrl.value.trim();
       }
-      const docRef = doc(db, "products", editingProductId);
-      await updateDoc(docRef, productData);
-    } else {
-      productData.estado = currentRole === 'colaborador' ? 'pendiente' : 'aprobado';
-      productData.creado_por = currentUser ? currentUser.email : 'anonimo';
-      productData.fecha = new Date().toISOString();
-      await addDoc(collection(db, "products"), productData);
-    }
 
-    modalCreate.classList.remove('active');
-    form.reset();
-    document.getElementById('p-imagen-base64').value = '';
-    editingProductId = null;
+      const productData = {
+        nombre: document.getElementById('p-nombre').value,
+        tipo: document.getElementById('p-tipo').value,
+        rama_magia: document.getElementById('p-rama').value,
+        propietario_idea: document.getElementById('p-propietario').value,
+        stock: parseInt(document.getElementById('p-stock').value) || 0,
+        imagen: finalImagen,
+        archivo: document.getElementById('p-archivo').value,
+        descripcion: document.getElementById('p-descripcion').value,
+      };
+
+      if (editingProductId) {
+        if (currentRole === 'colaborador') {
+          alert("No tienes permisos para editar productos.");
+          submitBtn.disabled = false;
+          submitBtn.textContent = "Guardar Producto";
+          return;
+        }
+        const docRef = doc(db, "products", editingProductId);
+        await updateDoc(docRef, productData);
+      } else {
+        productData.estado = currentRole === 'colaborador' ? 'pendiente' : 'aprobado';
+        productData.creado_por = currentUser ? currentUser.email : 'anonimo';
+        productData.fecha = new Date().toISOString();
+        await addDoc(collection(db, "products"), productData);
+      }
+
+      modalCreate.classList.remove('active');
+      form.reset();
+      editingProductId = null;
+    } catch (error) {
+      alert("Error al guardar el producto: " + error.message);
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Guardar Producto";
+    }
   });
 
   ['filter-search', 'filter-type', 'filter-magic'].forEach(id => {
@@ -725,12 +731,11 @@ window.openEditModal = (id) => {
   document.getElementById('p-propietario').value = product.propietario_idea || '';
   document.getElementById('p-stock').value = product.stock || 0;
   
-  // Limpiar campos de imagen previos
+  // Limpiar selector de archivos local
   document.getElementById('p-imagen-file').value = '';
-  document.getElementById('p-imagen-base64').value = '';
 
   if (product.imagen && product.imagen.startsWith('data:')) {
-    document.getElementById('p-imagen-base64').value = product.imagen;
+    // Si es Base64, mostramos pestaña de archivo (aunque el input file físico se mantenga limpio para un nuevo cambio)
     document.getElementById('p-imagen').value = '';
     document.getElementById('btn-tab-file').click();
   } else {
