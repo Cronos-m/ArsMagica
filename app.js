@@ -624,6 +624,7 @@ function setupModalEvents() {
       inputUrl.style.display = 'block';
       inputFile.style.display = 'none';
       inputFile.value = '';
+      inputBase64.value = '';
     };
 
     btnTabFile.onclick = () => {
