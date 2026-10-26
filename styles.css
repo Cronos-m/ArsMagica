@@ -322,6 +322,13 @@ input:-webkit-autofill:focus {
   color: var(--primary);
 }
 
+.tab-img-btn.active {
+  background: var(--bg-color) !important;
+  box-shadow: var(--shadow-inset) !important;
+  color: var(--primary) !important;
+  font-weight: 700;
+}
+
 .filters-bar {
   display: flex;
   gap: 16px;

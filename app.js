@@ -328,6 +328,8 @@ function openProductModal() {
   editingProductId = null;
   document.getElementById('modal-title').textContent = "Registrar Producto / Idea";
   document.getElementById('form-create-product').reset();
+  document.getElementById('p-imagen-base64').value = '';
+  document.getElementById('btn-tab-url').click();
   document.getElementById('modal-create').classList.add('active');
 }
 
@@ -608,6 +610,44 @@ function setupModalEvents() {
   document.getElementById('btn-close-reject').onclick = () => modalReject.classList.remove('active');
   document.getElementById('btn-cancel-reject').onclick = () => modalReject.classList.remove('active');
 
+  // Control de pestañas para la imagen (URL vs Archivo local)
+  const btnTabUrl = document.getElementById('btn-tab-url');
+  const btnTabFile = document.getElementById('btn-tab-file');
+  const inputUrl = document.getElementById('p-imagen');
+  const inputFile = document.getElementById('p-imagen-file');
+  const inputBase64 = document.getElementById('p-imagen-base64');
+
+  if (btnTabUrl && btnTabFile) {
+    btnTabUrl.onclick = () => {
+      btnTabUrl.classList.add('active');
+      btnTabFile.classList.remove('active');
+      inputUrl.style.display = 'block';
+      inputFile.style.display = 'none';
+      inputFile.value = '';
+    };
+
+    btnTabFile.onclick = () => {
+      btnTabFile.classList.add('active');
+      btnTabUrl.classList.remove('active');
+      inputFile.style.display = 'block';
+      inputUrl.style.display = 'none';
+      inputUrl.value = '';
+    };
+  }
+
+  if (inputFile) {
+    inputFile.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          inputBase64.value = reader.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+  }
+
   document.getElementById('p-tipo').addEventListener('change', (e) => {
     document.getElementById('group-stock').style.display = e.target.value === 'digital' ? 'none' : 'block';
   });
@@ -615,13 +655,17 @@ function setupModalEvents() {
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     
+    const base64Value = document.getElementById('p-imagen-base64').value;
+    const urlValue = document.getElementById('p-imagen').value;
+    const finalImagen = base64Value || urlValue || 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=500';
+
     const productData = {
       nombre: document.getElementById('p-nombre').value,
       tipo: document.getElementById('p-tipo').value,
       rama_magia: document.getElementById('p-rama').value,
       propietario_idea: document.getElementById('p-propietario').value,
       stock: parseInt(document.getElementById('p-stock').value) || 0,
-      imagen: document.getElementById('p-imagen').value,
+      imagen: finalImagen,
       archivo: document.getElementById('p-archivo').value,
       descripcion: document.getElementById('p-descripcion').value,
     };
@@ -642,6 +686,7 @@ function setupModalEvents() {
 
     modalCreate.classList.remove('active');
     form.reset();
+    document.getElementById('p-imagen-base64').value = '';
     editingProductId = null;
   });
 
@@ -663,7 +708,17 @@ window.openEditModal = (id) => {
   document.getElementById('p-rama').value = product.rama_magia || 'Cartomagia';
   document.getElementById('p-propietario').value = product.propietario_idea || '';
   document.getElementById('p-stock').value = product.stock || 0;
-  document.getElementById('p-imagen').value = product.imagen || '';
+  
+  if (product.imagen && product.imagen.startsWith('data:')) {
+    document.getElementById('p-imagen-base64').value = product.imagen;
+    document.getElementById('p-imagen').value = '';
+    document.getElementById('btn-tab-file').click();
+  } else {
+    document.getElementById('p-imagen').value = product.imagen || '';
+    document.getElementById('p-imagen-base64').value = '';
+    document.getElementById('btn-tab-url').click();
+  }
+
   document.getElementById('p-archivo').value = product.archivo || '';
   document.getElementById('p-descripcion').value = product.descripcion || '';
   
