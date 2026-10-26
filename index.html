@@ -208,11 +208,25 @@
         <div id="requests-grid" class="requests-grid" style="margin-top: 20px;"></div>
       </section>
 
+<!-- VISTA: USUARIOS (Exclusivo SuperAdmin) -->
       <section id="view-users" class="content-section">
-        <h3>Gestión de Usuarios y Roles</h3>
-        <p class="subtitle">Módulo reservado exclusivamente para el SuperAdministrador.</p>
-        <div class="panel" style="padding: 20px; border-radius: 16px; background: var(--bg-color); box-shadow: var(--shadow-flat); margin-top: 20px;">
-          <p>Los roles se administran de manera segura desde la base de datos Firestore.</p>
+        <h3>Gestión de Usuarios y Permisos</h3>
+        <p class="subtitle">Administra y asigna roles a los usuarios del sistema en tiempo real.</p>
+        
+        <div class="panel" style="padding: 20px; border-radius: 16px; background: var(--bg-color); box-shadow: var(--shadow-flat); margin-top: 20px; overflow-x: auto;">
+          <table style="width: 100%; border-collapse: collapse; text-align: left;">
+            <thead>
+              <tr style="border-bottom: 2px solid var(--text-muted); color: var(--text-muted); font-size: 0.85rem;">
+                <th style="padding: 12px 8px;">Nombre</th>
+                <th style="padding: 12px 8px;">Correo</th>
+                <th style="padding: 12px 8px;">Rol Actual</th>
+                <th style="padding: 12px 8px;">Cambiar Rol</th>
+              </tr>
+            </thead>
+            <tbody id="users-table-body">
+              <!-- Se puebla dinámicamente desde app.js -->
+            </tbody>
+          </table>
         </div>
       </section>
     </main>

@@ -48,7 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupFirebaseAuthObserver();
 });
 
-// Control de Tema
+// Control de Tema (Oscuro / Claro)
 function setupThemeToggle() {
   const themeBtns = [document.getElementById('theme-toggle'), document.getElementById('theme-toggle-login')];
   const themeIcons = [document.getElementById('theme-icon'), document.getElementById('login-theme-icon')];
@@ -79,7 +79,7 @@ function setupThemeToggle() {
   }
 }
 
-// Menú Móvil
+// Menú Móvil Retráctil Dinámico
 function setupMobileSidebar() {
   const sidebar = document.getElementById('sidebar');
   const btnToggle = document.getElementById('btn-toggle-sidebar');
@@ -101,7 +101,7 @@ function setupMobileSidebar() {
   });
 }
 
-// Intercambio de Pestañas
+// Intercambio de Pestañas (Iniciar Sesión vs Registrarse)
 function setupAuthTabs() {
   const tabLogin = document.getElementById('tab-login');
   const tabRegister = document.getElementById('tab-register');
@@ -125,7 +125,7 @@ function setupAuthTabs() {
   };
 }
 
-// Observador de Auth
+// Observador de Autenticación
 function setupFirebaseAuthObserver() {
   onAuthStateChanged(auth, async (user) => {
     if (user) {
@@ -143,7 +143,7 @@ function setupFirebaseAuthObserver() {
   });
 }
 
-// Rol de Usuario
+// Verificación de rol y permisos
 async function fetchUserRole(email) {
   try {
     const usersRef = collection(db, "users");
@@ -166,6 +166,10 @@ async function fetchUserRole(email) {
     });
 
     setupFirebaseRealtimeProducts();
+
+    if (currentRole === 'superadmin') {
+      setupFirebaseRealtimeUsers();
+    }
   } catch (error) {
     console.error("Error al verificar permisos:", error);
     currentRole = "colaborador";
@@ -179,7 +183,21 @@ function setupAuthEvents() {
 
   document.getElementById('btn-google-login').onclick = async () => {
     try {
-      await signInWithPopup(auth, googleProvider);
+      const result = await signInWithPopup(auth, googleProvider);
+      const user = result.user;
+      
+      const usersRef = collection(db, "users");
+      const q = query(usersRef, where("email", "==", user.email));
+      const querySnapshot = await getDocs(q);
+
+      if (querySnapshot.empty) {
+        await addDoc(usersRef, {
+          nombre: user.displayName || user.email.split('@')[0],
+          email: user.email,
+          rol: "colaborador",
+          creado: new Date().toISOString()
+        });
+      }
     } catch (error) {
       alert("Acceso denegado: " + error.message);
     }
@@ -260,6 +278,7 @@ function setupNavigation() {
   });
 }
 
+// Productos en tiempo real
 function setupFirebaseRealtimeProducts() {
   const productsRef = collection(db, "products");
   
@@ -274,6 +293,59 @@ function setupFirebaseRealtimeProducts() {
     renderRequests();
   });
 }
+
+// Usuarios en tiempo real (Para SuperAdmin)
+function setupFirebaseRealtimeUsers() {
+  if (currentRole !== 'superadmin') return;
+
+  const usersRef = collection(db, "users");
+  onSnapshot(usersRef, (snapshot) => {
+    const usersList = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+    renderUsersTable(usersList);
+  });
+}
+
+function renderUsersTable(users) {
+  const tbody = document.getElementById('users-table-body');
+  if (!tbody) return;
+
+  if (users.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="4" style="padding: 16px; text-align: center; color: var(--text-muted);">No hay usuarios registrados.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = users.map(u => `
+    <tr style="border-bottom: 1px solid rgba(160, 174, 192, 0.2);">
+      <td style="padding: 12px 8px; font-weight: 600;">${u.nombre || 'Sin Nombre'}</td>
+      <td style="padding: 12px 8px; color: var(--text-muted);">${u.email}</td>
+      <td style="padding: 12px 8px;"><span class="tag digital">${(u.rol || 'colaborador').toUpperCase()}</span></td>
+      <td style="padding: 12px 8px;">
+        <select class="input-field" style="padding: 6px 10px; width: auto; font-size: 0.85rem;" onchange="updateUserRole('${u.id}', this.value)">
+          <option value="colaborador" ${u.rol === 'colaborador' ? 'selected' : ''}>Colaborador</option>
+          <option value="admin" ${u.rol === 'admin' ? 'selected' : ''}>Administrador</option>
+          <option value="superadmin" ${u.rol === 'superadmin' ? 'selected' : ''}>SuperAdministrador</option>
+        </select>
+      </td>
+    </tr>
+  `).join('');
+}
+
+window.updateUserRole = async (userId, newRole) => {
+  if (currentRole !== 'superadmin') {
+    alert("Solo el SuperAdministrador puede cambiar los roles de los usuarios.");
+    return;
+  }
+  try {
+    const userRef = doc(db, "users", userId);
+    await updateDoc(userRef, { rol: newRole });
+    alert("Rol actualizado correctamente.");
+  } catch (error) {
+    alert("Error al actualizar el rol: " + error.message);
+  }
+};
 
 function updateMetrics() {
   const approved = allProducts.filter(p => p.estado === 'aprobado');
@@ -312,7 +384,6 @@ function renderProducts() {
 
   grid.innerHTML = filtered.map(p => `
     <div class="card">
-      <!-- Contenedor con efecto de imagen Blanco y Negro -> Color en Hover -->
       <div class="product-image-container">
         <img src="${p.imagen || 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=500'}" alt="${p.nombre}" class="product-thumb">
       </div>
@@ -326,7 +397,6 @@ function renderProducts() {
       ${p.tipo === 'fisico' ? `<p><strong>Stock:</strong> ${p.stock}</p>` : ''}
       <p style="font-size:0.85rem; color: var(--text-muted);">${p.descripcion || ''}</p>
       
-      <!-- Botón para abrir recurso adjunto (PDF, MP4 o Link) si existe -->
       ${p.archivo ? `
         <a href="${p.archivo}" target="_blank" class="btn" style="padding: 6px 12px; font-size: 0.8rem; justify-content: center; text-decoration: none; color: var(--primary);">
           <i class="fa-solid fa-paperclip"></i> Ver Archivo / Recurso
