@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ars Magica - Gestión de Inventario & PI</title>
+  <link rel="stylesheet" href="styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+  <!-- PANTALLA DE AUTH (LOGIN / REGISTRO) -->
+  <div id="login-screen" class="login-screen">
+    <div class="login-card">
+      <button id="theme-toggle-login" class="btn-theme-corner" title="Cambiar tema">
+        <i class="fa-solid fa-moon" id="login-theme-icon"></i>
+      </button>
+
+      <div class="brand-login">
+        <div class="logo-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+        <h2>Ars Magica</h2>
+      </div>
+
+      <button id="btn-google-login" class="btn btn-google">
+        <i class="fa-brands fa-google"></i> Continuar con Google
+      </button>
+
+      <div class="divider"><span>o ingresa con correo</span></div>
+
+      <!-- FORMULARIO DE LOGIN -->
+      <form id="form-login">
+        <div class="form-group">
+          <label>Correo Electrónico</label>
+          <input type="email" id="login-email" class="input-field" required autocomplete="email">
+        </div>
+        <div class="form-group">
+          <label>Contraseña</label>
+          <input type="password" id="login-password" class="input-field" required autocomplete="current-password">
+        </div>
+        
+        <div style="text-align: right; margin-top: -4px; margin-bottom: 12px;">
+          <a href="#" id="link-forgot-password" class="auth-link">¿Olvidaste tu contraseña?</a>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center;">
+          Iniciar Sesión
+        </button>
+      </form>
+
+      <!-- FORMULARIO DE REGISTRO -->
+      <form id="form-register" style="display: none;">
+        <div class="form-group">
+          <label>Nombre Completo</label>
+          <input type="text" id="reg-name" class="input-field" required placeholder="Ej: Fulano de Tal">
+        </div>
+        <div class="form-group">
+          <label>Correo Electrónico</label>
+          <input type="email" id="reg-email" class="input-field" required placeholder="Ej: fulano@ejemplo.com" autocomplete="email">
+        </div>
+        <div class="form-group">
+          <label>Contraseña</label>
+          <input type="password" id="reg-password" class="input-field" required autocomplete="new-password">
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; margin-top: 12px;">
+          Crear Cuenta
+        </button>
+      </form>
+
+      <!-- Pestañas para alternar entre Iniciar Sesión y Registrarse (Movidas ABAJO) -->
+      <div class="auth-tabs">
+        <button id="tab-login" class="tab-btn active">Iniciar Sesión</button>
+        <button id="tab-register" class="tab-btn">Registrarse</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- APLICACIÓN PRINCIPAL -->
+  <div class="app-container" id="app-container" style="display: none;">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="logo-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+        <h2>Ars Magica</h2>
+      </div>
+
+      <button id="theme-toggle" class="btn btn-theme">
+        <i class="fa-solid fa-moon" id="theme-icon"></i> <span id="theme-text">Modo Oscuro</span>
+      </button>
+
+      <div class="role-selector-card">
+        <label><i class="fa-solid fa-user-gear"></i> Rol Activo:</label>
+        <select id="role-select" disabled>
+          <option value="superadmin">SuperAdministrador</option>
+          <option value="admin">Administrador</option>
+          <option value="colaborador">Colaborador</option>
+        </select>
+        <span id="user-email-display" style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; word-break: break-all;"></span>
+      </div>
+
+      <nav class="nav-menu">
+        <button class="nav-btn active" data-view="dashboard">
+          <i class="fa-solid fa-chart-pie"></i> <span>Dashboard</span>
+        </button>
+        <button class="nav-btn" data-view="products">
+          <i class="fa-solid fa-box-archive"></i> <span>Productos</span>
+        </button>
+        <button class="nav-btn" data-view="requests">
+          <i class="fa-solid fa-inbox"></i> <span>Solicitudes</span>
+          <span class="badge" id="requests-count">0</span>
+        </button>
+        <button class="nav-btn superadmin-only" data-view="users">
+          <i class="fa-solid fa-users-gear"></i> <span>Usuarios</span>
+        </button>
+      </nav>
+
+      <div style="margin-top: auto;">
+        <button class="btn btn-danger" id="btn-logout" style="width: 100%; justify-content: center;">
+          <i class="fa-solid fa-right-from-bracket"></i> Cerrar Sesión
+        </button>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="top-bar">
+        <div>
+          <h1 id="welcome-title">¡Bienvenido!</h1>
+          <p class="subtitle">Panel de control de inventario y propiedad intelectual</p>
+        </div>
+        <button class="btn btn-primary" id="btn-open-create">
+          <i class="fa-solid fa-plus"></i> Nuevo Producto
+        </button>
+      </header>
+
+      <section id="view-dashboard" class="content-section active">
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <div class="icon"><i class="fa-solid fa-cubes"></i></div>
+            <div class="info">
+              <span class="metric-value" id="total-products">0</span>
+              <span class="metric-label">Total Productos</span>
+            </div>
+          </div>
+          <div class="metric-card">
+            <div class="icon"><i class="fa-solid fa-file-code"></i></div>
+            <div class="info">
+              <span class="metric-value" id="digital-products">0</span>
+              <span class="metric-label">Digitales</span>
+            </div>
+          </div>
+          <div class="metric-card">
+            <div class="icon"><i class="fa-solid fa-boxes-stacked"></i></div>
+            <div class="info">
+              <span class="metric-value" id="physical-products">0</span>
+              <span class="metric-label">Físicos</span>
+            </div>
+          </div>
+          <div class="metric-card alert">
+            <div class="icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <div class="info">
+              <span class="metric-value" id="low-stock-count">0</span>
+              <span class="metric-label">Stock Bajo</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="dashboard-panels">
+          <div class="panel" style="padding: 20px; border-radius: 16px; background: var(--bg-color); box-shadow: var(--shadow-flat);">
+            <h3><i class="fa-solid fa-bell"></i> Alertas de Stock Bajo</h3>
+            <div id="low-stock-list" class="alert-list" style="margin-top: 12px;"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="view-products" class="content-section">
+        <div class="filters-bar">
+          <input type="text" id="filter-search" placeholder="Buscar por nombre..." class="input-field">
+          
+          <select id="filter-type" class="input-field">
+            <option value="">Todos los Tipos</option>
+            <option value="fisico">Físico</option>
+            <option value="digital">Digital</option>
+          </select>
+
+          <select id="filter-magic" class="input-field">
+            <option value="">Todas las Ramas de Magia</option>
+            <option value="Cartomagia">Cartomagia</option>
+            <option value="Numismagia">Numismagia</option>
+            <option value="Escenario">Escenario</option>
+            <option value="Mentalismo">Mentalismo</option>
+            <option value="Cerca">Cerca</option>
+          </select>
+        </div>
+
+        <div id="products-grid" class="products-grid"></div>
+      </section>
+
+      <section id="view-requests" class="content-section">
+        <h3>Productos Pendientes de Aprobación</h3>
+        <p class="subtitle">Solo administradores pueden aprobar o descartar solicitudes.</p>
+        <div id="requests-grid" class="requests-grid" style="margin-top: 20px;"></div>
+      </section>
+
+      <section id="view-users" class="content-section">
+        <h3>Gestión de Usuarios y Roles</h3>
+        <p class="subtitle">Módulo reservado exclusivamente para el SuperAdministrador.</p>
+        <div class="panel" style="padding: 20px; border-radius: 16px; background: var(--bg-color); box-shadow: var(--shadow-flat); margin-top: 20px;">
+          <p>Los roles se administran de manera segura desde la base de datos Firestore.</p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- MODAL: RECUPERAR CONTRASEÑA -->
+  <div class="modal" id="modal-forgot">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Recuperar Contraseña</h3>
+        <button class="btn-close" id="btn-close-forgot"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <p style="font-size: 0.85rem; color: var(--text-muted);">Escribe tu correo electrónico y te enviaremos un enlace para restablecer tu contraseña.</p>
+      <form id="form-reset-password">
+        <div class="form-group">
+          <label>Correo Electrónico *</label>
+          <input type="email" id="reset-email" class="input-field" required placeholder="tu-correo@ejemplo.com">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" id="btn-cancel-forgot">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Enviar Enlace</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: CREAR / EDITAR PRODUCTO -->
+  <div class="modal" id="modal-create">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="modal-title">Registrar Producto / Idea</h3>
+        <button class="btn-close" id="btn-close-create"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <form id="form-create-product">
+        <div class="form-group">
+          <label>Nombre del Producto *</label>
+          <input type="text" id="p-nombre" class="input-field" required>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Tipo *</label>
+            <select id="p-tipo" class="input-field" required>
+              <option value="fisico">Físico</option>
+              <option value="digital">Digital</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Rama de Magia *</label>
+            <select id="p-rama" class="input-field" required>
+              <option value="Cartomagia">Cartomagia</option>
+              <option value="Numismagia">Numismagia</option>
+              <option value="Escenario">Escenario</option>
+              <option value="Mentalismo">Mentalismo</option>
+              <option value="Cerca">Cerca</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Dueño de la Idea / Propietario *</label>
+            <input type="text" id="p-propietario" class="input-field" placeholder="Ej: Luis Felipe" required>
+          </div>
+          <div class="form-group" id="group-stock">
+            <label>Stock Inicial</label>
+            <input type="number" id="p-stock" class="input-field" value="1" min="0">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Descripción</label>
+          <textarea id="p-descripcion" class="input-field" rows="3"></textarea>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" id="btn-cancel-create">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Guardar Producto</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: DESCARTAR PRODUCTO -->
+  <div class="modal" id="modal-reject">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Descartar Solicitud</h3>
+        <button class="btn-close" id="btn-close-reject"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="form-group">
+        <label>Razón del descarte (Obligatorio) *</label>
+        <textarea id="reject-reason" class="input-field" rows="4" placeholder="Indica el motivo..." required></textarea>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" id="btn-cancel-reject">Cancelar</button>
+        <button type="button" class="btn btn-danger" id="btn-confirm-reject">Confirmar Descarte</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
