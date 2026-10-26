@@ -289,6 +289,32 @@ input:-webkit-autofill:focus {
   -webkit-box-shadow: 0 0 0px 1000px var(--bg-color) inset !important;
 }
 
+/* Estilos para mostrar/ocultar contraseña (Ojo) */
+.password-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.password-container .input-field {
+  padding-right: 45px;
+}
+
+.btn-toggle-pass {
+  position: absolute;
+  right: 12px;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 1rem;
+  z-index: 10;
+}
+
+.btn-toggle-pass:hover {
+  color: var(--primary);
+}
+
 .filters-bar {
   display: flex;
   gap: 16px;
@@ -320,7 +346,6 @@ input:-webkit-autofill:focus {
   align-items: flex-start;
 }
 
-/* Contenedor de la imagen del producto con efecto B&W -> Color en Hover */
 .product-image-container {
   width: 100%;
   height: 160px;
@@ -550,6 +575,7 @@ input:-webkit-autofill:focus {
     left: -100%;
     width: 280px;
     height: 100vh;
+    overflow-y: auto;
     transition: left 0.3s ease-in-out;
     box-shadow: 10px 0 25px rgba(0,0,0,0.3);
   }

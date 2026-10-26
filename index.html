@@ -36,7 +36,12 @@
         </div>
         <div class="form-group">
           <label>Contraseña</label>
-          <input type="password" id="login-password" class="input-field" required autocomplete="current-password">
+          <div class="password-container">
+            <input type="password" id="login-password" class="input-field" required autocomplete="current-password">
+            <button type="button" class="btn-toggle-pass" onclick="togglePassword('login-password', 'eye-login')">
+              <i class="fa-solid fa-eye" id="eye-login"></i>
+            </button>
+          </div>
         </div>
         
         <div style="text-align: right; margin-top: -4px; margin-bottom: 12px;">
@@ -60,7 +65,12 @@
         </div>
         <div class="form-group">
           <label>Contraseña</label>
-          <input type="password" id="reg-password" class="input-field" required autocomplete="new-password">
+          <div class="password-container">
+            <input type="password" id="reg-password" class="input-field" required autocomplete="new-password">
+            <button type="button" class="btn-toggle-pass" onclick="togglePassword('reg-password', 'eye-reg')">
+              <i class="fa-solid fa-eye" id="eye-reg"></i>
+            </button>
+          </div>
         </div>
 
         <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; margin-top: 12px;">
@@ -141,7 +151,6 @@
           <h1 id="welcome-title">¡Bienvenido!</h1>
           <p class="subtitle" id="header-subtitle">Panel de control de inventario y propiedad intelectual</p>
         </div>
-        <!-- Botón dinámico controlado por JavaScript -->
         <button class="btn btn-primary" id="btn-open-create">
           <i class="fa-solid fa-plus"></i> <span id="btn-action-text">Nuevo Producto</span>
         </button>

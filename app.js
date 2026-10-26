@@ -313,7 +313,6 @@ function setupNavigation() {
       btn.classList.add('active');
       document.getElementById(`view-${targetView}`).classList.add('active');
 
-      // Cambio dinámico del botón principal superior
       if (targetView === 'users') {
         btnActionText.textContent = "Nuevo Usuario";
         btnOpenCreate.onclick = () => openUserModal();
@@ -407,6 +406,20 @@ window.deleteUser = async (userId) => {
 
 window.openEditUserModal = (userId) => {
   openUserModal(userId);
+};
+
+// Función global para mostrar/ocultar contraseña con el icono del ojo
+window.togglePassword = (inputId, iconId) => {
+  const input = document.getElementById(inputId);
+  const icon = document.getElementById(iconId);
+  
+  if (input.type === "password") {
+    input.type = "text";
+    icon.className = "fa-solid fa-eye-slash";
+  } else {
+    input.type = "password";
+    icon.className = "fa-solid fa-eye";
+  }
 };
 
 // Productos en tiempo real
@@ -586,7 +599,6 @@ function setupModalEvents() {
   const modalReject = document.getElementById('modal-reject');
   const form = document.getElementById('form-create-product');
 
-  // Configuración del botón principal al iniciar
   const btnOpenCreate = document.getElementById('btn-open-create');
   btnOpenCreate.onclick = () => openProductModal();
 
