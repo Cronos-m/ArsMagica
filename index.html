@@ -52,11 +52,11 @@
       <form id="form-register" style="display: none;">
         <div class="form-group">
           <label>Nombre Completo</label>
-          <input type="text" id="reg-name" class="input-field" required placeholder="Ej: Fulano de Tal">
+          <input type="text" id="reg-name" class="input-field" required placeholder="Ej: Luis Felipe">
         </div>
         <div class="form-group">
           <label>Correo Electrónico</label>
-          <input type="email" id="reg-email" class="input-field" required placeholder="Ej: fulano@ejemplo.com" autocomplete="email">
+          <input type="email" id="reg-email" class="input-field" required autocomplete="email">
         </div>
         <div class="form-group">
           <label>Contraseña</label>
@@ -68,7 +68,6 @@
         </button>
       </form>
 
-      <!-- Pestañas para alternar entre Iniciar Sesión y Registrarse (Movidas ABAJO) -->
       <div class="auth-tabs">
         <button id="tab-login" class="tab-btn active">Iniciar Sesión</button>
         <button id="tab-register" class="tab-btn">Registrarse</button>
@@ -78,10 +77,12 @@
 
   <!-- APLICACIÓN PRINCIPAL -->
   <div class="app-container" id="app-container" style="display: none;">
-    <aside class="sidebar">
+    
+    <aside class="sidebar" id="sidebar">
       <div class="brand">
         <div class="logo-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
         <h2>Ars Magica</h2>
+        <button id="btn-close-sidebar" class="btn-close-mobile"><i class="fa-solid fa-xmark"></i></button>
       </div>
 
       <button id="theme-toggle" class="btn btn-theme">
@@ -122,6 +123,12 @@
     </aside>
 
     <main class="main-content">
+      
+      <div class="mobile-top-bar">
+        <button id="btn-toggle-sidebar" class="btn" style="padding: 8px 14px;"><i class="fa-solid fa-bars"></i> Menú</button>
+        <span style="font-weight: 600; color: var(--primary);">Ars Magica</span>
+      </div>
+
       <header class="top-bar">
         <div>
           <h1 id="welcome-title">¡Bienvenido!</h1>
@@ -234,7 +241,7 @@
 
   <!-- MODAL: CREAR / EDITAR PRODUCTO -->
   <div class="modal" id="modal-create">
-    <div class="modal-content">
+    <div class="modal-content" style="max-height: 90vh; overflow-y: auto;">
       <div class="modal-header">
         <h3 id="modal-title">Registrar Producto / Idea</h3>
         <button class="btn-close" id="btn-close-create"><i class="fa-solid fa-xmark"></i></button>
@@ -273,10 +280,23 @@
             <input type="number" id="p-stock" class="input-field" value="1" min="0">
           </div>
         </div>
+        
+        <!-- Nuevos campos: URL de Imagen y URL de Archivo/Recurso -->
+        <div class="form-group">
+          <label>URL de la Imagen (Portada) *</label>
+          <input type="url" id="p-imagen" class="input-field" placeholder="https://ejemplo.com/imagen.jpg" required>
+        </div>
+        
+        <div class="form-group">
+          <label>Enlace de Archivo Adjunto (PDF, MP4, Link externo, etc.)</label>
+          <input type="url" id="p-archivo" class="input-field" placeholder="https://drive.google.com/... o enlace MP4/PDF">
+        </div>
+
         <div class="form-group">
           <label>Descripción</label>
           <textarea id="p-descripcion" class="input-field" rows="3"></textarea>
         </div>
+        
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" id="btn-cancel-create">Cancelar</button>
           <button type="submit" class="btn btn-primary">Guardar Producto</button>

@@ -4,7 +4,7 @@ import {
   createUserWithEmailAndPassword, sendPasswordResetEmail, signOut, onAuthStateChanged 
 } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
 import { 
-  getFirestore, collection, addDoc, setDoc, onSnapshot, updateDoc, doc, deleteDoc, getDocs, query, where 
+  getFirestore, collection, addDoc, onSnapshot, updateDoc, doc, deleteDoc, getDocs, query, where 
 } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
 
 // ==========================================
@@ -19,7 +19,6 @@ const firebaseConfig = {
   appId: "1:469811555446:web:9e7d916161e50c3df8c357",
   measurementId: "G-N5HNXT67RT"
 };
-
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -44,11 +43,12 @@ document.addEventListener('DOMContentLoaded', () => {
   setupAuthEvents();
   setupAuthTabs();
   setupNavigation();
+  setupMobileSidebar();
   setupModalEvents();
   setupFirebaseAuthObserver();
 });
 
-// Control de Tema (Oscuro / Claro) en Login y Dashboard
+// Control de Tema
 function setupThemeToggle() {
   const themeBtns = [document.getElementById('theme-toggle'), document.getElementById('theme-toggle-login')];
   const themeIcons = [document.getElementById('theme-icon'), document.getElementById('login-theme-icon')];
@@ -79,12 +79,36 @@ function setupThemeToggle() {
   }
 }
 
-// Intercambio de Pestañas (Iniciar Sesión vs Registrarse) abajo
+// Menú Móvil
+function setupMobileSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  const btnToggle = document.getElementById('btn-toggle-sidebar');
+  const btnClose = document.getElementById('btn-close-sidebar');
+
+  if (btnToggle && sidebar) {
+    btnToggle.onclick = () => sidebar.classList.add('mobile-open');
+  }
+  if (btnClose && sidebar) {
+    btnClose.onclick = () => sidebar.classList.remove('mobile-open');
+  }
+
+  navButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (window.innerWidth <= 768 && sidebar) {
+        sidebar.classList.remove('mobile-open');
+      }
+    });
+  });
+}
+
+// Intercambio de Pestañas
 function setupAuthTabs() {
   const tabLogin = document.getElementById('tab-login');
   const tabRegister = document.getElementById('tab-register');
   const formLogin = document.getElementById('form-login');
   const formRegister = document.getElementById('form-register');
+
+  if (!tabLogin || !tabRegister) return;
 
   tabLogin.onclick = () => {
     tabLogin.classList.add('active');
@@ -101,7 +125,7 @@ function setupAuthTabs() {
   };
 }
 
-// Observador de Autenticación
+// Observador de Auth
 function setupFirebaseAuthObserver() {
   onAuthStateChanged(auth, async (user) => {
     if (user) {
@@ -119,7 +143,7 @@ function setupFirebaseAuthObserver() {
   });
 }
 
-// Verificación de rol desde la base de datos
+// Rol de Usuario
 async function fetchUserRole(email) {
   try {
     const usersRef = collection(db, "users");
@@ -129,10 +153,10 @@ async function fetchUserRole(email) {
     if (!querySnapshot.empty) {
       const userData = querySnapshot.docs[0].data();
       currentRole = userData.rol || "colaborador";
-      welcomeTitle.textContent = `¡Bienvenido, ${userData.nombre || email} (${currentRole})!`;
+      welcomeTitle.textContent = `¡Bienvenido, ${userData.nombre || email}!`;
     } else {
       currentRole = "colaborador";
-      welcomeTitle.textContent = `¡Bienvenido (${currentRole})!`;
+      welcomeTitle.textContent = `¡Bienvenido!`;
     }
 
     roleSelect.value = currentRole;
@@ -288,18 +312,30 @@ function renderProducts() {
 
   grid.innerHTML = filtered.map(p => `
     <div class="card">
+      <!-- Contenedor con efecto de imagen Blanco y Negro -> Color en Hover -->
+      <div class="product-image-container">
+        <img src="${p.imagen || 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=500'}" alt="${p.nombre}" class="product-thumb">
+      </div>
+
       <div class="card-header">
         <h4>${p.nombre}</h4>
         <span class="tag ${p.tipo}">${p.tipo.toUpperCase()}</span>
       </div>
       <p><strong>Rama:</strong> ${p.rama_magia}</p>
-      <p><strong>Propietario / Dueño:</strong> ${p.propietario_idea}</p>
+      <p><strong>Propietario:</strong> ${p.propietario_idea}</p>
       ${p.tipo === 'fisico' ? `<p><strong>Stock:</strong> ${p.stock}</p>` : ''}
       <p style="font-size:0.85rem; color: var(--text-muted);">${p.descripcion || ''}</p>
       
+      <!-- Botón para abrir recurso adjunto (PDF, MP4 o Link) si existe -->
+      ${p.archivo ? `
+        <a href="${p.archivo}" target="_blank" class="btn" style="padding: 6px 12px; font-size: 0.8rem; justify-content: center; text-decoration: none; color: var(--primary);">
+          <i class="fa-solid fa-paperclip"></i> Ver Archivo / Recurso
+        </a>
+      ` : ''}
+
       ${canModify ? `
-        <div style="display:flex; gap:8px; margin-top:8px;">
-          <button class="btn" style="padding: 6px 12px; font-size: 0.8rem;" onclick="openEditModal('${p.id}')">Editar</button>
+        <div style="display:flex; gap:8px; margin-top:4px;">
+          <button class="btn" style="padding: 6px 12px; font-size: 0.8rem; flex:1;" onclick="openEditModal('${p.id}')">Editar</button>
           ${currentRole === 'superadmin' ? `<button class="btn btn-danger" style="padding: 6px 12px; font-size: 0.8rem;" onclick="deleteProduct('${p.id}')">Eliminar</button>` : ''}
         </div>
       ` : ''}
@@ -323,6 +359,9 @@ function renderRequests() {
 
   grid.innerHTML = pending.map(p => `
     <div class="card">
+      <div class="product-image-container">
+        <img src="${p.imagen || 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=500'}" alt="${p.nombre}" class="product-thumb">
+      </div>
       <h4>${p.nombre}</h4>
       <p><strong>Tipo:</strong> ${p.tipo} | <strong>Rama:</strong> ${p.rama_magia}</p>
       <p><strong>Propietario:</strong> ${p.propietario_idea}</p>
@@ -366,6 +405,8 @@ function setupModalEvents() {
       rama_magia: document.getElementById('p-rama').value,
       propietario_idea: document.getElementById('p-propietario').value,
       stock: parseInt(document.getElementById('p-stock').value) || 0,
+      imagen: document.getElementById('p-imagen').value,
+      archivo: document.getElementById('p-archivo').value,
       descripcion: document.getElementById('p-descripcion').value,
     };
 
@@ -406,6 +447,8 @@ window.openEditModal = (id) => {
   document.getElementById('p-rama').value = product.rama_magia || 'Cartomagia';
   document.getElementById('p-propietario').value = product.propietario_idea || '';
   document.getElementById('p-stock').value = product.stock || 0;
+  document.getElementById('p-imagen').value = product.imagen || '';
+  document.getElementById('p-archivo').value = product.archivo || '';
   document.getElementById('p-descripcion').value = product.descripcion || '';
   
   document.getElementById('group-stock').style.display = product.tipo === 'digital' ? 'none' : 'block';
