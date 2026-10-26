@@ -20,7 +20,6 @@ const firebaseConfig = {
   measurementId: "G-N5HNXT67RT"
 };
 
-
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
@@ -135,6 +134,8 @@ function setupFirebaseAuthObserver() {
       appContainer.style.display = 'flex';
       userEmailDisplay.textContent = user.email;
 
+      // Garantiza el registro en Firestore para Google Login y cualquier usuario
+      await ensureUserExistsInFirestore(user);
       await fetchUserRole(user.email);
     } else {
       currentUser = null;
@@ -142,6 +143,27 @@ function setupFirebaseAuthObserver() {
       appContainer.style.display = 'none';
     }
   });
+}
+
+// Función unificada para asegurar el documento en Firestore
+async function ensureUserExistsInFirestore(user) {
+  try {
+    const usersRef = collection(db, "users");
+    const q = query(usersRef, where("email", "==", user.email));
+    const querySnapshot = await getDocs(q);
+
+    if (querySnapshot.empty) {
+      await addDoc(usersRef, {
+        nombre: user.displayName || user.email.split('@')[0],
+        email: user.email,
+        rol: "colaborador",
+        creado: new Date().toISOString()
+      });
+      console.log("Nuevo usuario guardado en Firestore correctamente.");
+    }
+  } catch (error) {
+    console.error("Error al asegurar el usuario en Firestore:", error);
+  }
 }
 
 // Verificación de rol y permisos
@@ -182,88 +204,106 @@ async function fetchUserRole(email) {
 function setupAuthEvents() {
   const googleProvider = new GoogleAuthProvider();
 
-  document.getElementById('btn-google-login').onclick = async () => {
-    try {
-      const result = await signInWithPopup(auth, googleProvider);
-      const user = result.user;
-      
-      const usersRef = collection(db, "users");
-      const q = query(usersRef, where("email", "==", user.email));
-      const querySnapshot = await getDocs(q);
+  // BOTÓN GOOGLE LOGIN
+  const btnGoogle = document.getElementById('btn-google-login');
+  if (btnGoogle) {
+    btnGoogle.onclick = async () => {
+      try {
+        await signInWithPopup(auth, googleProvider);
+      } catch (error) {
+        alert("Acceso denegado: " + error.message);
+      }
+    };
+  }
 
-      if (querySnapshot.empty) {
-        await addDoc(usersRef, {
-          nombre: user.displayName || user.email.split('@')[0],
-          email: user.email,
+  // FORMULARIO DE LOGIN CON CORREO
+  const formLogin = document.getElementById('form-login');
+  if (formLogin) {
+    formLogin.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('login-email').value;
+      const password = document.getElementById('login-password').value;
+
+      try {
+        await signInWithEmailAndPassword(auth, email, password);
+      } catch (error) {
+        alert("Credenciales incorrectas o acceso no autorizado.");
+      }
+    });
+  }
+
+  // FORMULARIO DE REGISTRO
+  const formRegister = document.getElementById('form-register');
+  if (formRegister) {
+    formRegister.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = document.getElementById('reg-name').value;
+      const email = document.getElementById('reg-email').value;
+      const password = document.getElementById('reg-password').value;
+
+      try {
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+
+        await addDoc(collection(db, "users"), {
+          nombre: name || user.email.split('@')[0],
+          email: email,
           rol: "colaborador",
           creado: new Date().toISOString()
         });
+
+        alert("¡Cuenta creada con éxito! Bienvenido a Ars Magica.");
+      } catch (error) {
+        alert("Error al registrarse: " + error.message);
       }
-    } catch (error) {
-      alert("Acceso denegado: " + error.message);
-    }
-  };
+    });
+  }
 
-  document.getElementById('form-login').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const email = document.getElementById('login-email').value;
-    const password = document.getElementById('login-password').value;
-
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-    } catch (error) {
-      alert("Credenciales incorrectas o acceso no autorizado.");
-    }
-  });
-
-  document.getElementById('form-register').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const name = document.getElementById('reg-name').value;
-    const email = document.getElementById('reg-email').value;
-    const password = document.getElementById('reg-password').value;
-
-    try {
-      await createUserWithEmailAndPassword(auth, email, password);
-      
-      await addDoc(collection(db, "users"), {
-        nombre: name,
-        email: email,
-        rol: "colaborador",
-        creado: new Date().toISOString()
-      });
-
-      alert("¡Cuenta creada con éxito! Bienvenido a Ars Magica.");
-    } catch (error) {
-      alert("Error al registrarse: " + error.message);
-    }
-  });
-
+  // MODAL RECUPERAR CONTRASEÑA
   const modalForgot = document.getElementById('modal-forgot');
-  document.getElementById('link-forgot-password').onclick = (e) => {
-    e.preventDefault();
-    modalForgot.classList.add('active');
-  };
+  const linkForgot = document.getElementById('link-forgot-password');
+  const btnCloseForgot = document.getElementById('btn-close-forgot');
+  const btnCancelForgot = document.getElementById('btn-cancel-forgot');
+  const formReset = document.getElementById('form-reset-password');
 
-  document.getElementById('btn-close-forgot').onclick = () => modalForgot.classList.remove('active');
-  document.getElementById('btn-cancel-forgot').onclick = () => modalForgot.classList.remove('active');
+  if (linkForgot && modalForgot) {
+    linkForgot.onclick = (e) => {
+      e.preventDefault();
+      modalForgot.classList.add('active');
+    };
+  }
 
-  document.getElementById('form-reset-password').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const resetEmail = document.getElementById('reset-email').value;
+  if (btnCloseForgot && modalForgot) {
+    btnCloseForgot.onclick = () => modalForgot.classList.remove('active');
+  }
 
-    try {
-      await sendPasswordResetEmail(auth, resetEmail);
-      alert("Se ha enviado un correo para restablecer tu contraseña.");
-      modalForgot.classList.remove('active');
-      e.target.reset();
-    } catch (error) {
-      alert("Error al enviar el correo: " + error.message);
-    }
-  });
+  if (btnCancelForgot && modalForgot) {
+    btnCancelForgot.onclick = () => modalForgot.classList.remove('active');
+  }
 
-  document.getElementById('btn-logout').onclick = async () => {
-    await signOut(auth);
-  };
+  if (formReset && modalForgot) {
+    formReset.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const resetEmail = document.getElementById('reset-email').value;
+
+      try {
+        await sendPasswordResetEmail(auth, resetEmail);
+        alert("Se ha enviado un correo para restablecer tu contraseña.");
+        modalForgot.classList.remove('active');
+        e.target.reset();
+      } catch (error) {
+        alert("Error al enviar el correo: " + error.message);
+      }
+    });
+  }
+
+  // BOTÓN CERRAR SESIÓN
+  const btnLogout = document.getElementById('btn-logout');
+  if (btnLogout) {
+    btnLogout.onclick = async () => {
+      await signOut(auth);
+    };
+  }
 }
 
 function setupNavigation() {
