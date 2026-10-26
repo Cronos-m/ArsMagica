@@ -329,6 +329,7 @@ function openProductModal() {
   document.getElementById('modal-title').textContent = "Registrar Producto / Idea";
   document.getElementById('form-create-product').reset();
   document.getElementById('p-imagen-base64').value = '';
+  document.getElementById('p-imagen-file').value = '';
   document.getElementById('btn-tab-url').click();
   document.getElementById('modal-create').classList.add('active');
 }
@@ -624,7 +625,7 @@ function setupModalEvents() {
       inputUrl.style.display = 'block';
       inputFile.style.display = 'none';
       inputFile.value = '';
-      inputBase64.value = '';
+      inputBase64.value = ''; // Limpia el base64 si cambia a URL
     };
 
     btnTabFile.onclick = () => {
@@ -632,7 +633,7 @@ function setupModalEvents() {
       btnTabUrl.classList.remove('active');
       inputFile.style.display = 'block';
       inputUrl.style.display = 'none';
-      inputUrl.value = '';
+      inputUrl.value = ''; // Limpia la URL si cambia a archivo
     };
   }
 
@@ -642,7 +643,7 @@ function setupModalEvents() {
       if (file) {
         const reader = new FileReader();
         reader.onloadend = () => {
-          inputBase64.value = reader.result;
+          inputBase64.value = reader.result; // Almacena el nuevo archivo convertido
         };
         reader.readAsDataURL(file);
       }
@@ -658,7 +659,21 @@ function setupModalEvents() {
     
     const base64Value = document.getElementById('p-imagen-base64').value;
     const urlValue = document.getElementById('p-imagen').value;
-    const finalImagen = base64Value || urlValue || 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=500';
+
+    // Si estamos editando y no se seleccionó ni escribió nada nuevo, conservamos la imagen actual del producto
+    let finalImagen = 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=500';
+    if (editingProductId) {
+      const existingProduct = allProducts.find(p => p.id === editingProductId);
+      if (existingProduct) {
+        finalImagen = existingProduct.imagen;
+      }
+    }
+
+    if (btnTabFile.classList.contains('active') && base64Value) {
+      finalImagen = base64Value;
+    } else if (btnTabUrl.classList.contains('active') && urlValue.trim() !== '') {
+      finalImagen = urlValue.trim();
+    }
 
     const productData = {
       nombre: document.getElementById('p-nombre').value,
@@ -710,13 +725,16 @@ window.openEditModal = (id) => {
   document.getElementById('p-propietario').value = product.propietario_idea || '';
   document.getElementById('p-stock').value = product.stock || 0;
   
+  // Limpiar campos de imagen previos
+  document.getElementById('p-imagen-file').value = '';
+  document.getElementById('p-imagen-base64').value = '';
+
   if (product.imagen && product.imagen.startsWith('data:')) {
     document.getElementById('p-imagen-base64').value = product.imagen;
     document.getElementById('p-imagen').value = '';
     document.getElementById('btn-tab-file').click();
   } else {
     document.getElementById('p-imagen').value = product.imagen || '';
-    document.getElementById('p-imagen-base64').value = '';
     document.getElementById('btn-tab-url').click();
   }
 
