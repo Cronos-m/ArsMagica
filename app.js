@@ -328,8 +328,6 @@ function openProductModal() {
   editingProductId = null;
   document.getElementById('modal-title').textContent = "Registrar Producto / Idea";
   document.getElementById('form-create-product').reset();
-  document.getElementById('p-imagen-file').value = '';
-  document.getElementById('btn-tab-url').click();
   document.getElementById('modal-create').classList.add('active');
 }
 
@@ -519,6 +517,18 @@ function updateMetrics() {
   `).join('') || '<p style="color: var(--text-muted);">Sin alertas de stock.</p>';
 }
 
+// Devuelve un icono de FontAwesome acorde a la rama de magia para decorar la tarjeta
+function getMagicIcon(rama) {
+  switch (rama) {
+    case 'Cartomagia': return 'fa-solid fa-cards';
+    case 'Numismagia': return 'fa-solid fa-coins';
+    case 'Escenario': return 'fa-solid fa-masks-theater';
+    case 'Mentalismo': return 'fa-solid fa-brain';
+    case 'Cerca': return 'fa-solid fa-hand-sparkles';
+    default: return 'fa-solid fa-wand-magic-sparkles';
+  }
+}
+
 function renderProducts() {
   const grid = document.getElementById('products-grid');
   const searchVal = document.getElementById('filter-search').value.toLowerCase();
@@ -536,8 +546,8 @@ function renderProducts() {
 
   grid.innerHTML = filtered.map(p => `
     <div class="card">
-      <div class="product-image-container">
-        <img src="${p.imagen || 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=500'}" alt="${p.nombre}" class="product-thumb">
+      <div class="card-icon-header">
+        <i class="${getMagicIcon(p.rama_magia)}"></i>
       </div>
 
       <div class="card-header">
@@ -581,8 +591,8 @@ function renderRequests() {
 
   grid.innerHTML = pending.map(p => `
     <div class="card">
-      <div class="product-image-container">
-        <img src="${p.imagen || 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=500'}" alt="${p.nombre}" class="product-thumb">
+      <div class="card-icon-header">
+        <i class="${getMagicIcon(p.rama_magia)}"></i>
       </div>
       <h4>${p.nombre}</h4>
       <p><strong>Tipo:</strong> ${p.tipo} | <strong>Rama:</strong> ${p.rama_magia}</p>
@@ -594,16 +604,6 @@ function renderRequests() {
       </div>
     </div>
   `).join('');
-}
-
-// Función auxiliar para convertir archivo local a Base64 con Promesa
-function convertFileToBase64(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onloadend = () => resolve(reader.result);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
 }
 
 function setupModalEvents() {
@@ -620,30 +620,6 @@ function setupModalEvents() {
   document.getElementById('btn-close-reject').onclick = () => modalReject.classList.remove('active');
   document.getElementById('btn-cancel-reject').onclick = () => modalReject.classList.remove('active');
 
-  // Control de pestañas para la imagen (URL vs Archivo local)
-  const btnTabUrl = document.getElementById('btn-tab-url');
-  const btnTabFile = document.getElementById('btn-tab-file');
-  const inputUrl = document.getElementById('p-imagen');
-  const inputFile = document.getElementById('p-imagen-file');
-
-  if (btnTabUrl && btnTabFile) {
-    btnTabUrl.onclick = () => {
-      btnTabUrl.classList.add('active');
-      btnTabFile.classList.remove('active');
-      inputUrl.style.display = 'block';
-      inputFile.style.display = 'none';
-      inputFile.value = '';
-    };
-
-    btnTabFile.onclick = () => {
-      btnTabFile.classList.add('active');
-      btnTabUrl.classList.remove('active');
-      inputFile.style.display = 'block';
-      inputUrl.style.display = 'none';
-      inputUrl.value = '';
-    };
-  }
-
   document.getElementById('p-tipo').addEventListener('change', (e) => {
     document.getElementById('group-stock').style.display = e.target.value === 'digital' ? 'none' : 'block';
   });
@@ -656,32 +632,13 @@ function setupModalEvents() {
     submitBtn.textContent = "Guardando...";
 
     try {
-      let finalImagen = 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=500';
-
-      // Si estamos editando, tomamos por defecto la imagen que ya tenía
-      if (editingProductId) {
-        const existingProduct = allProducts.find(p => p.id === editingProductId);
-        if (existingProduct && existingProduct.imagen) {
-          finalImagen = existingProduct.imagen;
-        }
-      }
-
-      // Verificamos qué pestaña está activa y si hay un nuevo valor
-      if (btnTabFile.classList.contains('active') && inputFile.files[0]) {
-        // Convierte el archivo seleccionado a Base64 de forma síncrona/esperada
-        finalImagen = await convertFileToBase64(inputFile.files[0]);
-      } else if (btnTabUrl.classList.contains('active') && inputUrl.value.trim() !== '') {
-        finalImagen = inputUrl.value.trim();
-      }
-
       const productData = {
         nombre: document.getElementById('p-nombre').value,
         tipo: document.getElementById('p-tipo').value,
         rama_magia: document.getElementById('p-rama').value,
         propietario_idea: document.getElementById('p-propietario').value,
         stock: parseInt(document.getElementById('p-stock').value) || 0,
-        imagen: finalImagen,
-        archivo: document.getElementById('p-archivo').value,
+        archivo: document.getElementById('p-archivo').value.trim(),
         descripcion: document.getElementById('p-descripcion').value,
       };
 
@@ -731,18 +688,6 @@ window.openEditModal = (id) => {
   document.getElementById('p-propietario').value = product.propietario_idea || '';
   document.getElementById('p-stock').value = product.stock || 0;
   
-  // Limpiar selector de archivos local
-  document.getElementById('p-imagen-file').value = '';
-
-  if (product.imagen && product.imagen.startsWith('data:')) {
-    // Si es Base64, mostramos pestaña de archivo (aunque el input file físico se mantenga limpio para un nuevo cambio)
-    document.getElementById('p-imagen').value = '';
-    document.getElementById('btn-tab-file').click();
-  } else {
-    document.getElementById('p-imagen').value = product.imagen || '';
-    document.getElementById('btn-tab-url').click();
-  }
-
   document.getElementById('p-archivo').value = product.archivo || '';
   document.getElementById('p-descripcion').value = product.descripcion || '';
   
