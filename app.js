@@ -51,7 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupFirebaseAuthObserver();
 });
 
-// Control de Tema (Oscuro / Claro)
+// Control de Tema Material Design (Oscuro / Claro)
 function setupThemeToggle() {
   const themeBtns = [document.getElementById('theme-toggle'), document.getElementById('theme-toggle-login')];
   const themeIcons = [document.getElementById('theme-icon'), document.getElementById('login-theme-icon')];
@@ -74,7 +74,7 @@ function setupThemeToggle() {
 
   function updateThemeUI(theme) {
     themeIcons.forEach(icon => {
-      if (icon) icon.className = theme === 'dark' ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+      if (icon) icon.textContent = theme === 'dark' ? 'light_mode' : 'dark_mode';
     });
     if (themeText) {
       themeText.textContent = theme === 'dark' ? 'Modo Claro' : 'Modo Oscuro';
@@ -82,7 +82,7 @@ function setupThemeToggle() {
   }
 }
 
-// Menú Móvil Retráctil Dinámico
+// Menú Móvil Retráctil
 function setupMobileSidebar() {
   const sidebar = document.getElementById('sidebar');
   const btnToggle = document.getElementById('btn-toggle-sidebar');
@@ -248,7 +248,7 @@ function setupAuthEvents() {
           creado: new Date().toISOString()
         });
 
-        alert("¡Cuenta creada con éxito! Bienvenido a Ars Magica.");
+        alert("¡Cuenta creada con éxito!");
       } catch (error) {
         alert("Error al registrarse: " + error.message);
       }
@@ -257,7 +257,6 @@ function setupAuthEvents() {
 
   const modalForgot = document.getElementById('modal-forgot');
   const linkForgot = document.getElementById('link-forgot-password');
-  const btnCloseForgot = document.getElementById('btn-close-forgot');
   const btnCancelForgot = document.getElementById('btn-cancel-forgot');
   const formReset = document.getElementById('form-reset-password');
 
@@ -266,10 +265,6 @@ function setupAuthEvents() {
       e.preventDefault();
       modalForgot.classList.add('active');
     };
-  }
-
-  if (btnCloseForgot && modalForgot) {
-    btnCloseForgot.onclick = () => modalForgot.classList.remove('active');
   }
 
   if (btnCancelForgot && modalForgot) {
@@ -299,7 +294,7 @@ function setupAuthEvents() {
   if (btnMobileLogout) btnMobileLogout.onclick = async () => await signOut(auth);
 }
 
-// Navegación con control dinámico del botón principal según la sección
+// Navegación
 function setupNavigation() {
   const btnOpenCreate = document.getElementById('btn-open-create');
   const btnActionText = document.getElementById('btn-action-text');
@@ -357,7 +352,6 @@ function setupUserModalEvents() {
   const modalUser = document.getElementById('modal-user');
   const formUser = document.getElementById('form-save-user');
 
-  document.getElementById('btn-close-user-modal').onclick = () => modalUser.classList.remove('active');
   document.getElementById('btn-cancel-user-modal').onclick = () => modalUser.classList.remove('active');
 
   formUser.addEventListener('submit', async (e) => {
@@ -390,64 +384,48 @@ function setupUserModalEvents() {
 }
 
 window.deleteUser = async (userId) => {
-  if (currentRole !== 'superadmin') {
-    alert("Acción no autorizada.");
-    return;
-  }
-  if (confirm("¿Estás seguro de eliminar este usuario del sistema?")) {
+  if (currentRole !== 'superadmin') return;
+  if (confirm("¿Estás seguro de eliminar este usuario?")) {
     try {
       await deleteDoc(doc(db, "users", userId));
-      alert("Usuario eliminado correctamente.");
     } catch (error) {
-      alert("Error al eliminar usuario: " + error.message);
+      alert("Error: " + error.message);
     }
   }
 };
 
-window.openEditUserModal = (userId) => {
-  openUserModal(userId);
-};
+window.openEditUserModal = (userId) => openUserModal(userId);
 
-// Función global para mostrar/ocultar contraseña con el icono del ojo
 window.togglePassword = (inputId, iconId) => {
   const input = document.getElementById(inputId);
   const icon = document.getElementById(iconId);
   
   if (input.type === "password") {
     input.type = "text";
-    icon.className = "fa-solid fa-eye-slash";
+    icon.textContent = "visibility_off";
   } else {
     input.type = "password";
-    icon.className = "fa-solid fa-eye";
+    icon.textContent = "visibility";
   }
 };
 
-// Productos en tiempo real
 function setupFirebaseRealtimeProducts() {
   const productsRef = collection(db, "products");
   
   onSnapshot(productsRef, (snapshot) => {
-    allProducts = snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }));
-
+    allProducts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     updateMetrics();
     renderProducts();
     renderRequests();
   });
 }
 
-// Usuarios en tiempo real (Para SuperAdmin)
 function setupFirebaseRealtimeUsers() {
   if (currentRole !== 'superadmin') return;
 
   const usersRef = collection(db, "users");
   onSnapshot(usersRef, (snapshot) => {
-    allUsers = snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }));
+    allUsers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     renderUsersTable(allUsers);
   });
 }
@@ -457,41 +435,35 @@ function renderUsersTable(users) {
   if (!tbody) return;
 
   if (users.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="5" style="padding: 16px; text-align: center; color: var(--text-muted);">No hay usuarios registrados.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="5" style="padding: 16px; text-align: center;">No hay usuarios registrados.</td></tr>`;
     return;
   }
 
   tbody.innerHTML = users.map(u => `
-    <tr style="border-bottom: 1px solid rgba(160, 174, 192, 0.2);">
-      <td style="padding: 12px 8px; font-weight: 600;">${u.nombre || 'Sin Nombre'}</td>
-      <td style="padding: 12px 8px; color: var(--text-muted);">${u.email}</td>
-      <td style="padding: 12px 8px;"><span class="tag digital">${(u.rol || 'colaborador').toUpperCase()}</span></td>
-      <td style="padding: 12px 8px;">
-        <select class="input-field" style="padding: 6px 10px; width: auto; font-size: 0.85rem;" onchange="updateUserRole('${u.id}', this.value)">
+    <tr>
+      <td style="font-weight: 500;">${u.nombre || 'Sin Nombre'}</td>
+      <td style="color: var(--md-sys-color-on-surface-variant);">${u.email}</td>
+      <td><span class="tag digital">${(u.rol || 'colaborador').toUpperCase()}</span></td>
+      <td>
+        <select class="md-select-field" style="padding: 6px 12px; font-size: 0.85rem;" onchange="updateUserRole('${u.id}', this.value)">
           <option value="colaborador" ${u.rol === 'colaborador' ? 'selected' : ''}>Colaborador</option>
           <option value="admin" ${u.rol === 'admin' ? 'selected' : ''}>Administrador</option>
           <option value="superadmin" ${u.rol === 'superadmin' ? 'selected' : ''}>SuperAdministrador</option>
         </select>
       </td>
-      <td style="padding: 12px 8px; text-align: center;">
-        <div style="display:flex; gap:6px; justify-content: center;">
-          <button class="btn" style="padding: 6px 10px; font-size: 0.8rem;" onclick="openEditUserModal('${u.id}')">Editar</button>
-          <button class="btn btn-danger" style="padding: 6px 10px; font-size: 0.8rem;" onclick="deleteUser('${u.id}')">Eliminar</button>
-        </div>
+      <td style="text-align: center;">
+        <button class="md-button md-button-text" onclick="openEditUserModal('${u.id}')">Editar</button>
+        <button class="md-button md-button-text danger-text" onclick="deleteUser('${u.id}')">Eliminar</button>
       </td>
     </tr>
   `).join('');
 }
 
 window.updateUserRole = async (userId, newRole) => {
-  if (currentRole !== 'superadmin') {
-    alert("Solo el SuperAdministrador puede cambiar los roles de los usuarios.");
-    return;
-  }
+  if (currentRole !== 'superadmin') return;
   try {
     const userRef = doc(db, "users", userId);
     await updateDoc(userRef, { rol: newRole });
-    alert("Rol actualizado correctamente.");
   } catch (error) {
     alert("Error al actualizar el rol: " + error.message);
   }
@@ -511,21 +483,20 @@ function updateMetrics() {
 
   const container = document.getElementById('low-stock-list');
   container.innerHTML = lowStockList.map(p => `
-    <div style="padding: 8px 0; border-bottom: 1px solid rgba(160, 174, 192, 0.2);">
+    <div style="padding: 8px 0; border-bottom: 1px solid var(--md-sys-color-surface-variant);">
       <strong>${p.nombre}</strong> - Quedan <strong>${p.stock}</strong> unidades.
     </div>
-  `).join('') || '<p style="color: var(--text-muted);">Sin alertas de stock.</p>';
+  `).join('') || '<p style="color: var(--md-sys-color-on-surface-variant);">Sin alertas de stock.</p>';
 }
 
-// Devuelve un icono de FontAwesome acorde a la rama de magia para decorar la tarjeta
 function getMagicIcon(rama) {
   switch (rama) {
-    case 'Cartomagia': return 'fa-solid fa-cards';
-    case 'Numismagia': return 'fa-solid fa-coins';
-    case 'Escenario': return 'fa-solid fa-masks-theater';
-    case 'Mentalismo': return 'fa-solid fa-brain';
-    case 'Cerca': return 'fa-solid fa-hand-sparkles';
-    default: return 'fa-solid fa-wand-magic-sparkles';
+    case 'Cartomagia': return 'style';
+    case 'Numismagia': return 'monetization_on';
+    case 'Escenario': return 'theater_comedy';
+    case 'Mentalismo': return 'psychology';
+    case 'Cerca': return 'genetics';
+    default: return 'auto_awesome';
   }
 }
 
@@ -545,30 +516,30 @@ function renderProducts() {
   const canModify = currentRole === 'superadmin' || currentRole === 'admin';
 
   grid.innerHTML = filtered.map(p => `
-    <div class="card">
+    <div class="md-card">
       <div class="card-icon-header">
-        <i class="${getMagicIcon(p.rama_magia)}"></i>
+        <span class="material-symbols-outlined">${getMagicIcon(p.rama_magia)}</span>
       </div>
 
-      <div class="card-header">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
         <h4>${p.nombre}</h4>
         <span class="tag ${p.tipo}">${p.tipo.toUpperCase()}</span>
       </div>
-      <p><strong>Rama:</strong> ${p.rama_magia}</p>
-      <p><strong>Propietario:</strong> ${p.propietario_idea}</p>
-      ${p.tipo === 'fisico' ? `<p><strong>Stock:</strong> ${p.stock}</p>` : ''}
-      <p style="font-size:0.85rem; color: var(--text-muted);">${p.descripcion || ''}</p>
+      <p style="font-size:0.9rem;"><strong>Rama:</strong> ${p.rama_magia}</p>
+      <p style="font-size:0.9rem;"><strong>Propietario:</strong> ${p.propietario_idea}</p>
+      ${p.tipo === 'fisico' ? `<p style="font-size:0.9rem;"><strong>Stock:</strong> ${p.stock}</p>` : ''}
+      <p style="font-size:0.85rem; color: var(--md-sys-color-on-surface-variant); margin-top: 6px;">${p.descripcion || ''}</p>
       
       ${p.archivo ? `
-        <a href="${p.archivo}" target="_blank" class="btn" style="padding: 6px 12px; font-size: 0.8rem; justify-content: center; text-decoration: none; color: var(--primary);">
-          <i class="fa-solid fa-paperclip"></i> Ver Archivo / Recurso
+        <a href="${p.archivo}" target="_blank" class="md-button md-button-outlined" style="margin-top: 12px; width: 100%; text-decoration: none;">
+          <span class="material-symbols-outlined">attach_file</span> Ver Recurso
         </a>
       ` : ''}
 
       ${canModify ? `
-        <div style="display:flex; gap:8px; margin-top:4px;">
-          <button class="btn" style="padding: 6px 12px; font-size: 0.8rem; flex:1;" onclick="openEditModal('${p.id}')">Editar</button>
-          ${currentRole === 'superadmin' ? `<button class="btn btn-danger" style="padding: 6px 12px; font-size: 0.8rem;" onclick="deleteProduct('${p.id}')">Eliminar</button>` : ''}
+        <div style="display:flex; gap:8px; margin-top:12px;">
+          <button class="md-button md-button-tonal" style="flex:1;" onclick="openEditModal('${p.id}')">Editar</button>
+          ${currentRole === 'superadmin' ? `<button class="md-button md-button-text danger-text" onclick="deleteProduct('${p.id}')">Eliminar</button>` : ''}
         </div>
       ` : ''}
     </div>
@@ -585,22 +556,22 @@ function renderRequests() {
   }
 
   if (currentRole === 'colaborador') {
-    grid.innerHTML = '<p style="color: var(--text-muted);">No tienes permisos para ver las solicitudes pendientes.</p>';
+    grid.innerHTML = '<p style="color: var(--md-sys-color-on-surface-variant);">No tienes permisos para ver las solicitudes pendientes.</p>';
     return;
   }
 
   grid.innerHTML = pending.map(p => `
-    <div class="card">
+    <div class="md-card">
       <div class="card-icon-header">
-        <i class="${getMagicIcon(p.rama_magia)}"></i>
+        <span class="material-symbols-outlined">${getMagicIcon(p.rama_magia)}</span>
       </div>
       <h4>${p.nombre}</h4>
-      <p><strong>Tipo:</strong> ${p.tipo} | <strong>Rama:</strong> ${p.rama_magia}</p>
-      <p><strong>Propietario:</strong> ${p.propietario_idea}</p>
-      <p><strong>Registrado por:</strong> ${p.creado_por || 'Colaborador'}</p>
-      <div style="display:flex; gap:8px; margin-top:12px;">
-        <button class="btn btn-primary" onclick="approveProduct('${p.id}')">Aprobar</button>
-        <button class="btn btn-danger" onclick="openRejectModal('${p.id}')">Descartar</button>
+      <p style="font-size:0.9rem;"><strong>Tipo:</strong> ${p.tipo} | <strong>Rama:</strong> ${p.rama_magia}</p>
+      <p style="font-size:0.9rem;"><strong>Propietario:</strong> ${p.propietario_idea}</p>
+      <p style="font-size:0.85rem; color: var(--md-sys-color-on-surface-variant);">Registrado por: ${p.creado_por || 'Colaborador'}</p>
+      <div style="display:flex; gap:8px; margin-top:16px;">
+        <button class="md-button md-button-filled" style="flex:1;" onclick="approveProduct('${p.id}')">Aprobar</button>
+        <button class="md-button md-button-text danger-text" onclick="openRejectModal('${p.id}')">Descartar</button>
       </div>
     </div>
   `).join('');
@@ -611,13 +582,7 @@ function setupModalEvents() {
   const modalReject = document.getElementById('modal-reject');
   const form = document.getElementById('form-create-product');
 
-  const btnOpenCreate = document.getElementById('btn-open-create');
-  btnOpenCreate.onclick = () => openProductModal();
-
-  document.getElementById('btn-close-create').onclick = () => modalCreate.classList.remove('active');
   document.getElementById('btn-cancel-create').onclick = () => modalCreate.classList.remove('active');
-  
-  document.getElementById('btn-close-reject').onclick = () => modalReject.classList.remove('active');
   document.getElementById('btn-cancel-reject').onclick = () => modalReject.classList.remove('active');
 
   document.getElementById('p-tipo').addEventListener('change', (e) => {
@@ -629,7 +594,6 @@ function setupModalEvents() {
     
     const submitBtn = document.getElementById('btn-submit-product');
     submitBtn.disabled = true;
-    submitBtn.textContent = "Guardando...";
 
     try {
       const productData = {
@@ -643,12 +607,7 @@ function setupModalEvents() {
       };
 
       if (editingProductId) {
-        if (currentRole === 'colaborador') {
-          alert("No tienes permisos para editar productos.");
-          submitBtn.disabled = false;
-          submitBtn.textContent = "Guardar Producto";
-          return;
-        }
+        if (currentRole === 'colaborador') return;
         const docRef = doc(db, "products", editingProductId);
         await updateDoc(docRef, productData);
       } else {
@@ -662,10 +621,9 @@ function setupModalEvents() {
       form.reset();
       editingProductId = null;
     } catch (error) {
-      alert("Error al guardar el producto: " + error.message);
+      alert("Error al guardar producto: " + error.message);
     } finally {
       submitBtn.disabled = false;
-      submitBtn.textContent = "Guardar Producto";
     }
   });
 
@@ -696,11 +654,8 @@ window.openEditModal = (id) => {
 };
 
 window.deleteProduct = async (id) => {
-  if (currentRole !== 'superadmin') {
-    alert("Acción no autorizada. Solo el SuperAdministrador puede eliminar productos.");
-    return;
-  }
-  if (confirm("¿Estás seguro de eliminar este producto permanentemente?")) {
+  if (currentRole !== 'superadmin') return;
+  if (confirm("¿Estás seguro de eliminar este producto?")) {
     await deleteDoc(doc(db, "products", id));
   }
 };
@@ -719,10 +674,7 @@ window.openRejectModal = (id) => {
 
 document.getElementById('btn-confirm-reject').onclick = async () => {
   const reason = document.getElementById('reject-reason').value;
-  if (!reason.trim()) {
-    alert("Por favor escribe la razón del descarte.");
-    return;
-  }
+  if (!reason.trim()) return;
 
   const docRef = doc(db, "products", selectedRejectId);
   await updateDoc(docRef, { 

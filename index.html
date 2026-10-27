@@ -4,76 +4,79 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Ars Magica - Gestión de Inventario & PI</title>
+  <!-- Tipografía Google Roboto y Material Symbols (Iconos de Google) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
   <link rel="stylesheet" href="styles.css">
-  <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
 
   <!-- PANTALLA DE AUTH (LOGIN / REGISTRO) -->
   <div id="login-screen" class="login-screen">
-    <div class="login-card">
-      <button id="theme-toggle-login" class="btn-theme-corner" title="Cambiar tema">
-        <i class="fa-solid fa-moon" id="login-theme-icon"></i>
+    <div class="md-card login-card">
+      <button id="theme-toggle-login" class="md-icon-button corner-theme-btn" title="Cambiar tema">
+        <span class="material-symbols-outlined" id="login-theme-icon">dark_mode</span>
       </button>
 
       <div class="brand-login">
-        <div class="logo-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+        <span class="material-symbols-outlined brand-icon">auto_awesome</span>
         <h2>Ars Magica</h2>
       </div>
 
-      <button id="btn-google-login" class="btn btn-google">
-        <i class="fa-brands fa-google"></i> Continuar con Google
+      <button id="btn-google-login" class="md-button md-button-outlined btn-google">
+        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" width="18">
+        Continuar con Google
       </button>
 
       <div class="divider"><span>o ingresa con correo</span></div>
 
       <!-- FORMULARIO DE LOGIN -->
       <form id="form-login">
-        <div class="form-group">
+        <div class="md-text-field">
+          <input type="email" id="login-email" required placeholder=" " autocomplete="email">
           <label>Correo Electrónico</label>
-          <input type="email" id="login-email" class="input-field" required autocomplete="email">
-        </div>
-        <div class="form-group">
-          <label>Contraseña</label>
-          <div class="password-container">
-            <input type="password" id="login-password" class="input-field" required autocomplete="current-password">
-            <button type="button" class="btn-toggle-pass" onclick="togglePassword('login-password', 'eye-login')">
-              <i class="fa-solid fa-eye" id="eye-login"></i>
-            </button>
-          </div>
         </div>
         
-        <div style="text-align: right; margin-top: -4px; margin-bottom: 12px;">
+        <div class="md-text-field password-field">
+          <input type="password" id="login-password" required placeholder=" " autocomplete="current-password">
+          <label>Contraseña</label>
+          <button type="button" class="md-icon-button pass-toggle" onclick="togglePassword('login-password', 'eye-login')">
+            <span class="material-symbols-outlined" id="eye-login">visibility</span>
+          </button>
+        </div>
+        
+        <div style="text-align: right; margin-top: -8px; margin-bottom: 16px;">
           <a href="#" id="link-forgot-password" class="auth-link">¿Olvidaste tu contraseña?</a>
         </div>
 
-        <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center;">
+        <button type="submit" class="md-button md-button-filled" style="width: 100%;">
           Iniciar Sesión
         </button>
       </form>
 
       <!-- FORMULARIO DE REGISTRO -->
       <form id="form-register" style="display: none;">
-        <div class="form-group">
+        <div class="md-text-field">
+          <input type="text" id="reg-name" required placeholder=" ">
           <label>Nombre Completo</label>
-          <input type="text" id="reg-name" class="input-field" required placeholder="Ej: Luis Felipe">
         </div>
-        <div class="form-group">
+        
+        <div class="md-text-field">
+          <input type="email" id="reg-email" required placeholder=" " autocomplete="email">
           <label>Correo Electrónico</label>
-          <input type="email" id="reg-email" class="input-field" required autocomplete="email">
         </div>
-        <div class="form-group">
+        
+        <div class="md-text-field password-field">
+          <input type="password" id="reg-password" required placeholder=" " autocomplete="new-password">
           <label>Contraseña</label>
-          <div class="password-container">
-            <input type="password" id="reg-password" class="input-field" required autocomplete="new-password">
-            <button type="button" class="btn-toggle-pass" onclick="togglePassword('reg-password', 'eye-reg')">
-              <i class="fa-solid fa-eye" id="eye-reg"></i>
-            </button>
-          </div>
+          <button type="button" class="md-icon-button pass-toggle" onclick="togglePassword('reg-password', 'eye-reg')">
+            <span class="material-symbols-outlined" id="eye-reg">visibility</span>
+          </button>
         </div>
 
-        <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; margin-top: 12px;">
+        <button type="submit" class="md-button md-button-filled" style="width: 100%; margin-top: 8px;">
           Crear Cuenta
         </button>
       </form>
@@ -88,46 +91,60 @@
   <!-- APLICACIÓN PRINCIPAL -->
   <div class="app-container" id="app-container" style="display: none;">
     
-    <aside class="sidebar" id="sidebar">
-      <div class="brand">
-        <div class="logo-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
-        <h2>Ars Magica</h2>
-        <button id="btn-close-sidebar" class="btn-close-mobile"><i class="fa-solid fa-xmark"></i></button>
+    <!-- SIDEBAR / MATERIAL NAVIGATION DRAWER -->
+    <aside class="navigation-drawer" id="sidebar">
+      <div class="drawer-header">
+        <div class="brand">
+          <span class="material-symbols-outlined brand-icon">auto_awesome</span>
+          <h2>Ars Magica</h2>
+        </div>
+        <button id="btn-close-sidebar" class="md-icon-button btn-close-mobile">
+          <span class="material-symbols-outlined">close</span>
+        </button>
       </div>
 
-      <button id="theme-toggle" class="btn btn-theme">
-        <i class="fa-solid fa-moon" id="theme-icon"></i> <span id="theme-text">Modo Oscuro</span>
-      </button>
-
-      <div class="role-selector-card">
-        <label><i class="fa-solid fa-user-gear"></i> Rol Activo:</label>
-        <select id="role-select" disabled>
-          <option value="superadmin">SuperAdministrador</option>
-          <option value="admin">Administrador</option>
-          <option value="colaborador">Colaborador</option>
-        </select>
-        <span id="user-email-display" style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; word-break: break-all;"></span>
+      <div class="role-badge-card">
+        <span class="material-symbols-outlined">manage_accounts</span>
+        <div class="role-info">
+          <label>Rol Activo</label>
+          <select id="role-select" disabled>
+            <option value="superadmin">SuperAdministrador</option>
+            <option value="admin">Administrador</option>
+            <option value="colaborador">Colaborador</option>
+          </select>
+        </div>
+        <span id="user-email-display" class="user-email-tag"></span>
       </div>
 
       <nav class="nav-menu">
         <button class="nav-btn active" data-view="dashboard">
-          <i class="fa-solid fa-chart-pie"></i> <span>Dashboard</span>
+          <span class="material-symbols-outlined">dashboard</span>
+          <span>Dashboard</span>
         </button>
         <button class="nav-btn" data-view="products">
-          <i class="fa-solid fa-box-archive"></i> <span>Productos</span>
+          <span class="material-symbols-outlined">inventory_2</span>
+          <span>Productos</span>
         </button>
         <button class="nav-btn" data-view="requests">
-          <i class="fa-solid fa-inbox"></i> <span>Solicitudes</span>
-          <span class="badge" id="requests-count">0</span>
+          <span class="material-symbols-outlined">move_to_inbox</span>
+          <span>Solicitudes</span>
+          <span class="md-badge" id="requests-count">0</span>
         </button>
         <button class="nav-btn superadmin-only" data-view="users">
-          <i class="fa-solid fa-users-gear"></i> <span>Usuarios</span>
+          <span class="material-symbols-outlined">group</span>
+          <span>Usuarios</span>
         </button>
       </nav>
 
-      <div style="margin-top: auto;">
-        <button class="btn btn-danger" id="btn-logout" style="width: 100%; justify-content: center;">
-          <i class="fa-solid fa-right-from-bracket"></i> Cerrar Sesión
+      <div class="drawer-footer">
+        <button id="theme-toggle" class="md-button md-button-tonal" style="width: 100%; justify-content: flex-start;">
+          <span class="material-symbols-outlined" id="theme-icon">dark_mode</span>
+          <span id="theme-text">Modo Oscuro</span>
+        </button>
+        
+        <button class="md-button md-button-text danger-text" id="btn-logout" style="width: 100%; justify-content: flex-start; margin-top: 8px;">
+          <span class="material-symbols-outlined">logout</span>
+          <span>Cerrar Sesión</span>
         </button>
       </div>
     </aside>
@@ -136,51 +153,53 @@
       
       <!-- BARRA SUPERIOR MÓVIL -->
       <div class="mobile-top-bar">
-        <button id="btn-toggle-sidebar" class="btn" style="padding: 8px 14px;">
-          <i class="fa-solid fa-bars"></i> Menú
+        <button id="btn-toggle-sidebar" class="md-icon-button">
+          <span class="material-symbols-outlined">menu</span>
         </button>
-        <span style="font-weight: 600; color: var(--primary);">Ars Magica</span>
-        <button id="btn-mobile-logout" class="btn btn-danger" style="padding: 8px 12px; font-size: 0.85rem;" title="Cerrar Sesión">
-          <i class="fa-solid fa-right-from-bracket"></i>
+        <span class="mobile-title">Ars Magica</span>
+        <button id="btn-mobile-logout" class="md-icon-button danger-text" title="Cerrar Sesión">
+          <span class="material-symbols-outlined">logout</span>
         </button>
       </div>
 
-      <!-- CABECERA DINÁMICA -->
+      <!-- CABECERA -->
       <header class="top-bar">
         <div>
           <h1 id="welcome-title">¡Bienvenido!</h1>
           <p class="subtitle" id="header-subtitle">Panel de control de inventario y propiedad intelectual</p>
         </div>
-        <button class="btn btn-primary" id="btn-open-create">
-          <i class="fa-solid fa-plus"></i> <span id="btn-action-text">Nuevo Producto</span>
+        <button class="md-button md-button-filled fab-extended" id="btn-open-create">
+          <span class="material-symbols-outlined">add</span>
+          <span id="btn-action-text">Nuevo Producto</span>
         </button>
       </header>
 
+      <!-- VISTA: DASHBOARD -->
       <section id="view-dashboard" class="content-section active">
         <div class="metrics-grid">
-          <div class="metric-card">
-            <div class="icon"><i class="fa-solid fa-cubes"></i></div>
+          <div class="md-card metric-card">
+            <span class="material-symbols-outlined metric-icon">widgets</span>
             <div class="info">
               <span class="metric-value" id="total-products">0</span>
               <span class="metric-label">Total Productos</span>
             </div>
           </div>
-          <div class="metric-card">
-            <div class="icon"><i class="fa-solid fa-file-code"></i></div>
+          <div class="md-card metric-card">
+            <span class="material-symbols-outlined metric-icon">code</span>
             <div class="info">
               <span class="metric-value" id="digital-products">0</span>
               <span class="metric-label">Digitales</span>
             </div>
           </div>
-          <div class="metric-card">
-            <div class="icon"><i class="fa-solid fa-boxes-stacked"></i></div>
+          <div class="md-card metric-card">
+            <span class="material-symbols-outlined metric-icon">package_2</span>
             <div class="info">
               <span class="metric-value" id="physical-products">0</span>
               <span class="metric-label">Físicos</span>
             </div>
           </div>
-          <div class="metric-card alert">
-            <div class="icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+          <div class="md-card metric-card alert">
+            <span class="material-symbols-outlined metric-icon">warning</span>
             <div class="info">
               <span class="metric-value" id="low-stock-count">0</span>
               <span class="metric-label">Stock Bajo</span>
@@ -188,55 +207,63 @@
           </div>
         </div>
 
-        <div class="dashboard-panels">
-          <div class="panel" style="padding: 20px; border-radius: 16px; background: var(--bg-color); box-shadow: var(--shadow-flat);">
-            <h3><i class="fa-solid fa-bell"></i> Alertas de Stock Bajo</h3>
-            <div id="low-stock-list" class="alert-list" style="margin-top: 12px;"></div>
-          </div>
+        <div class="md-card panel-card">
+          <h3><span class="material-symbols-outlined">notifications</span> Alertas de Stock Bajo</h3>
+          <div id="low-stock-list" class="alert-list" style="margin-top: 16px;"></div>
         </div>
       </section>
 
+      <!-- VISTA: PRODUCTOS -->
       <section id="view-products" class="content-section">
         <div class="filters-bar">
-          <input type="text" id="filter-search" placeholder="Buscar por nombre..." class="input-field">
-          
-          <select id="filter-type" class="input-field">
-            <option value="">Todos los Tipos</option>
-            <option value="fisico">Físico</option>
-            <option value="digital">Digital</option>
-          </select>
+          <div class="md-text-field filter-input">
+            <input type="text" id="filter-search" placeholder=" ">
+            <label>Buscar por nombre...</label>
+          </div>
 
-          <select id="filter-magic" class="input-field">
-            <option value="">Todas las Ramas de Magia</option>
-            <option value="Cartomagia">Cartomagia</option>
-            <option value="Numismagia">Numismagia</option>
-            <option value="Escenario">Escenario</option>
-            <option value="Mentalismo">Mentalismo</option>
-            <option value="Cerca">Cerca</option>
-          </select>
+          <div class="md-select-field">
+            <select id="filter-type">
+              <option value="">Todos los Tipos</option>
+              <option value="fisico">Físico</option>
+              <option value="digital">Digital</option>
+            </select>
+          </div>
+
+          <div class="md-select-field">
+            <select id="filter-magic">
+              <option value="">Todas las Ramas de Magia</option>
+              <option value="Cartomagia">Cartomagia</option>
+              <option value="Numismagia">Numismagia</option>
+              <option value="Escenario">Escenario</option>
+              <option value="Mentalismo">Mentalismo</option>
+              <option value="Cerca">Cerca</option>
+            </select>
+          </div>
         </div>
 
         <div id="products-grid" class="products-grid"></div>
       </section>
 
+      <!-- VISTA: SOLICITUDES -->
       <section id="view-requests" class="content-section">
         <h3>Productos Pendientes de Aprobación</h3>
         <p class="subtitle">Solo administradores pueden aprobar o descartar solicitudes.</p>
-        <div id="requests-grid" class="requests-grid" style="margin-top: 20px;"></div>
+        <div id="requests-grid" class="requests-grid" style="margin-top: 24px;"></div>
       </section>
 
+      <!-- VISTA: USUARIOS -->
       <section id="view-users" class="content-section">
         <h3>Gestión de Usuarios y Permisos</h3>
         <p class="subtitle">Administra, crea y asigna roles a los usuarios del sistema.</p>
-        <div class="panel" style="padding: 20px; border-radius: 16px; background: var(--bg-color); box-shadow: var(--shadow-flat); margin-top: 20px; overflow-x: auto;">
-          <table style="width: 100%; border-collapse: collapse; text-align: left;">
+        <div class="md-card table-card" style="margin-top: 24px; overflow-x: auto;">
+          <table class="md-table">
             <thead>
-              <tr style="border-bottom: 2px solid var(--text-muted); color: var(--text-muted); font-size: 0.85rem;">
-                <th style="padding: 12px 8px;">Nombre</th>
-                <th style="padding: 12px 8px;">Correo</th>
-                <th style="padding: 12px 8px;">Rol Actual</th>
-                <th style="padding: 12px 8px;">Cambiar Rol</th>
-                <th style="padding: 12px 8px; text-align: center;">Acciones</th>
+              <tr>
+                <th>Nombre</th>
+                <th>Correo</th>
+                <th>Rol Actual</th>
+                <th>Cambiar Rol</th>
+                <th style="text-align: center;">Acciones</th>
               </tr>
             </thead>
             <tbody id="users-table-body">
@@ -248,50 +275,44 @@
     </main>
   </div>
 
-  <!-- MODAL: RECUPERAR CONTRASEÑA -->
-  <div class="modal" id="modal-forgot">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3>Recuperar Contraseña</h3>
-        <button class="btn-close" id="btn-close-forgot"><i class="fa-solid fa-xmark"></i></button>
-      </div>
-      <p style="font-size: 0.85rem; color: var(--text-muted);">Escribe tu correo electrónico y te enviaremos un enlace para restablecer tu contraseña.</p>
-      <form id="form-reset-password">
-        <div class="form-group">
+  <!-- DIÁLOGO: RECUPERAR CONTRASEÑA -->
+  <div class="md-dialog-overlay" id="modal-forgot">
+    <div class="md-dialog">
+      <h3>Recuperar Contraseña</h3>
+      <p class="subtitle">Escribe tu correo electrónico y te enviaremos un enlace para restablecer tu contraseña.</p>
+      <form id="form-reset-password" style="margin-top: 16px;">
+        <div class="md-text-field">
+          <input type="email" id="reset-email" required placeholder=" ">
           <label>Correo Electrónico *</label>
-          <input type="email" id="reset-email" class="input-field" required placeholder="tu-correo@ejemplo.com">
         </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" id="btn-cancel-forgot">Cancelar</button>
-          <button type="submit" class="btn btn-primary">Enviar Enlace</button>
+        <div class="md-dialog-actions">
+          <button type="button" class="md-button md-button-text" id="btn-cancel-forgot">Cancelar</button>
+          <button type="submit" class="md-button md-button-filled">Enviar Enlace</button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- MODAL: CREAR / EDITAR PRODUCTO -->
-  <div class="modal" id="modal-create">
-    <div class="modal-content" style="max-height: 90vh; overflow-y: auto;">
-      <div class="modal-header">
-        <h3 id="modal-title">Registrar Producto / Idea</h3>
-        <button class="btn-close" id="btn-close-create"><i class="fa-solid fa-xmark"></i></button>
-      </div>
-      <form id="form-create-product">
-        <div class="form-group">
+  <!-- DIÁLOGO: CREAR / EDITAR PRODUCTO -->
+  <div class="md-dialog-overlay" id="modal-create">
+    <div class="md-dialog">
+      <h3 id="modal-title">Registrar Producto / Idea</h3>
+      <form id="form-create-product" style="margin-top: 16px;">
+        <div class="md-text-field">
+          <input type="text" id="p-nombre" required placeholder=" ">
           <label>Nombre del Producto *</label>
-          <input type="text" id="p-nombre" class="input-field" required>
         </div>
+
         <div class="form-row">
-          <div class="form-group">
-            <label>Tipo *</label>
-            <select id="p-tipo" class="input-field" required>
+          <div class="md-select-field">
+            <select id="p-tipo" required>
               <option value="fisico">Físico</option>
               <option value="digital">Digital</option>
             </select>
           </div>
-          <div class="form-group">
-            <label>Rama de Magia *</label>
-            <select id="p-rama" class="input-field" required>
+
+          <div class="md-select-field">
+            <select id="p-rama" required>
               <option value="Cartomagia">Cartomagia</option>
               <option value="Numismagia">Numismagia</option>
               <option value="Escenario">Escenario</option>
@@ -300,81 +321,80 @@
             </select>
           </div>
         </div>
+
         <div class="form-row">
-          <div class="form-group">
+          <div class="md-text-field">
+            <input type="text" id="p-propietario" required placeholder=" ">
             <label>Dueño de la Idea / Propietario *</label>
-            <input type="text" id="p-propietario" class="input-field" placeholder="Ej: Luis Felipe" required>
           </div>
-          <div class="form-group" id="group-stock">
+
+          <div class="md-text-field" id="group-stock">
+            <input type="number" id="p-stock" value="1" min="0" placeholder=" ">
             <label>Stock Inicial</label>
-            <input type="number" id="p-stock" class="input-field" value="1" min="0">
           </div>
         </div>
         
-        <div class="form-group">
-          <label>Enlace de Archivo Adjunto (PDF, MP4, Link externo, etc.)</label>
-          <input type="url" id="p-archivo" class="input-field" placeholder="https://drive.google.com/... o enlace MP4/PDF">
+        <div class="md-text-field">
+          <input type="url" id="p-archivo" placeholder=" ">
+          <label>Enlace de Recurso (Drive, PDF, Video, etc.)</label>
         </div>
 
-        <div class="form-group">
+        <div class="md-text-field">
+          <textarea id="p-descripcion" rows="3" placeholder=" "></textarea>
           <label>Descripción</label>
-          <textarea id="p-descripcion" class="input-field" rows="3"></textarea>
         </div>
         
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" id="btn-cancel-create">Cancelar</button>
-          <button type="submit" class="btn btn-primary" id="btn-submit-product">Guardar Producto</button>
+        <div class="md-dialog-actions">
+          <button type="button" class="md-button md-button-text" id="btn-cancel-create">Cancelar</button>
+          <button type="submit" class="md-button md-button-filled" id="btn-submit-product">Guardar</button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- MODAL: CREAR / EDITAR USUARIO (CRUD SuperAdmin) -->
-  <div class="modal" id="modal-user">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3 id="user-modal-title">Registrar Nuevo Usuario</h3>
-        <button class="btn-close" id="btn-close-user-modal"><i class="fa-solid fa-xmark"></i></button>
-      </div>
-      <form id="form-save-user">
-        <div class="form-group">
+  <!-- DIÁLOGO: CREAR / EDITAR USUARIO -->
+  <div class="md-dialog-overlay" id="modal-user">
+    <div class="md-dialog">
+      <h3 id="user-modal-title">Registrar Nuevo Usuario</h3>
+      <form id="form-save-user" style="margin-top: 16px;">
+        <div class="md-text-field">
+          <input type="text" id="u-nombre" required placeholder=" ">
           <label>Nombre Completo *</label>
-          <input type="text" id="u-nombre" class="input-field" required placeholder="Ej: Carlos Magos">
         </div>
-        <div class="form-group">
+        
+        <div class="md-text-field">
+          <input type="email" id="u-email" required placeholder=" ">
           <label>Correo Electrónico *</label>
-          <input type="email" id="u-email" class="input-field" required placeholder="usuario@correo.com">
         </div>
-        <div class="form-group">
-          <label>Rol Asignado *</label>
-          <select id="u-rol" class="input-field" required>
+
+        <div class="md-select-field">
+          <select id="u-rol" required>
             <option value="colaborador">Colaborador</option>
             <option value="admin">Administrador</option>
             <option value="superadmin">SuperAdministrador</option>
           </select>
         </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" id="btn-cancel-user-modal">Cancelar</button>
-          <button type="submit" class="btn btn-primary">Guardar Usuario</button>
+
+        <div class="md-dialog-actions">
+          <button type="button" class="md-button md-button-text" id="btn-cancel-user-modal">Cancelar</button>
+          <button type="submit" class="md-button md-button-filled">Guardar Usuario</button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- MODAL: DESCARTAR PRODUCTO -->
-  <div class="modal" id="modal-reject">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3>Descartar Solicitud</h3>
-        <button class="btn-close" id="btn-close-reject"><i class="fa-solid fa-xmark"></i></button>
+  <!-- DIÁLOGO: DESCARTAR PRODUCTO -->
+  <div class="md-dialog-overlay" id="modal-reject">
+    <div class="md-dialog">
+      <h3>Descartar Solicitud</h3>
+      <p class="subtitle">Indica la razón por la cual rechazas este producto.</p>
+      <div class="md-text-field" style="margin-top: 16px;">
+        <textarea id="reject-reason" rows="4" required placeholder=" "></textarea>
+        <label>Razón del descarte *</label>
       </div>
-      <div class="form-group">
-        <label>Razón del descarte (Obligatorio) *</label>
-        <textarea id="reject-reason" class="input-field" rows="4" placeholder="Indica el motivo..." required></textarea>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" id="btn-cancel-reject">Cancelar</button>
-        <button type="button" class="btn btn-danger" id="btn-confirm-reject">Confirmar Descarte</button>
+      <div class="md-dialog-actions">
+        <button type="button" class="md-button md-button-text" id="btn-cancel-reject">Cancelar</button>
+        <button type="button" class="md-button md-button-filled danger-btn" id="btn-confirm-reject">Confirmar Descarte</button>
       </div>
     </div>
   </div>
